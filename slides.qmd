@@ -1,5 +1,5 @@
 ---
-title: "Present a great story for data science projects- Summer 2025"
+title: "GLMM Maternal Mortality Federaly- Summer 2025"
 subtitle: "This is a Slide Template"
 author: "Carolyn Herrera & Catherine Funte (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'

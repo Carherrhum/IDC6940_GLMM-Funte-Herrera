@@ -31,6 +31,9 @@ writing!
 :::
 
 ## Introduction
+There are some data sets and analysis that cannot be analyzed properly due to varying problems such as over dispersion and correlated observations. General Linear Models are not equipped to handle such wild data(add in book citation). For example, longitudinal clinical trial basic count data is not comparable between subjects because it can be difficult to determine if outcomes are time dependent or due to treatment groups, thus a general linear mixed model method may be utilized to represent dependence upon each patient, incorporate covariate data, create time as a function, account for variability between patients,and  be flexible and tractable(add in other citation).
+With public health data there are many observations that may be correlated so how could analysis be presented well?
+We wish to analyze the data of federal maternal mortality deaths by utilizing a General linear mixed model with Poisson link as it is count data (book). We wish to see if ethnicity (a fixed effect) has any influence upon maternal death count by year(random effect). Instead of utilizing a weighted approach to see differences between groups (that one citation) we will use offset method with the log of births as the offset (find citaton)
 
 The introduction should:
 

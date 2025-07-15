@@ -39,13 +39,13 @@ In practical terms, GLMMs are especially useful when data points are not indepen
 
 GLMMs are good for:
 
--  Handling hierarchical or grouped data (e.g., students within classrooms, patients within clinics)
+-  Handling hierarchical or grouped data (e.g., students within classrooms, patients within clinics)[@lee1996hierarchical]
 
 
 -  Modeling non-normal outcomes, such as:
 
 
-   -  Binary outcomes (using logistic GLMMs)
+   -  Binary outcomes (using logistic GLMMs)[@wang2017generalized]
 
 
    -  Count data (using Poisson or negative binomial GLMMs)

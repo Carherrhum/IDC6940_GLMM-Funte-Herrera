@@ -45,7 +45,7 @@ GLMMs are good for:
    -  Binary outcomes (using logistic GLMMs)[@wang2017generalized]
 
 
-   -  Count data (using Poisson or negative binomial GLMMs)
+   -  Count data (using Poisson or negative binomial GLMMs)[@candy2000application]
 
 
    -  Proportions or rates

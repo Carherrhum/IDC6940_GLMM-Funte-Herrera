@@ -31,6 +31,37 @@ writing!
 :::
 
 ## Introduction
+
+
+Generalized Linear Mixed Models (GLMMs) are a flexible class of statistical models that combine the features of two powerful tools: Generalized Linear Models (GLMs) and Mixed-Effects Models. Like GLMs, GLMMs can model non-normal outcome variables, such as binary, count, or proportion data. However, they go a step further by incorporating random effects, which account for variation due to grouping or clustering in the data.
+
+In practical terms, GLMMs are especially useful when data points are not independent, such as when students are nested within schools, patients are treated within hospitals, or repeated measures are taken from the same subject over time. The random effects help model the correlation within clusters and allow for unobserved heterogeneity—differences that are not captured by the measured covariates.
+
+GLMMs are good for:
+
+-  Handling hierarchical or grouped data (e.g., students within classrooms, patients within clinics)
+
+
+-  Modeling non-normal outcomes, such as:
+
+
+   -  Binary outcomes (using logistic GLMMs)
+
+
+   -  Count data (using Poisson or negative binomial GLMMs)
+
+
+   -  Proportions or rates
+
+
+-  Improving inference by accounting for both fixed effects (predictors of interest) and random effects (random variation across groups)
+
+
+-  Reducing bias and inflated Type I error rates that can result from ignoring data structure
+
+
+GLMMs are ideal when your data is both complex in structure and involves non-Gaussian response variables, making them indispensable in fields like medicine, ecology, education, and social sciences. Tawiah et al describes zero-inflated Poisson GLMMs, an extension of Poisson GLMM that allows for overdispersion due to a prevalence of zeros in the data, common in health sector data[@tawiah2020zero]. The paper compares a Poisson GLM, a zero-inflated Poisson GLM, a Poisson GLMM, and a zero-inflated Poisson GLMM, applied to clustered maternal mortality data. Another paper by Owili et al utilizes a GLMM to investigate the impact of particulate matter on maternal and infant mortality globally [@owili2020impacts]. They use a Poisson link function and take year and country as random effects to account for differences in global data. 
+
 There are some data sets and analysis that cannot be analyzed properly due to varying problems such as over dispersion and correlated observations. General Linear Models are not equipped to handle such wild data(add in book citation). For example, longitudinal clinical trial basic count data is not comparable between subjects because it can be difficult to determine if outcomes are time dependent or due to treatment groups, thus a general linear mixed model method may be utilized to represent dependence upon each patient, incorporate covariate data, create time as a function, account for variability between patients,and  be flexible and tractable(add in other citation).
 With public health data there are many observations that may be correlated so how could analysis be presented well?
 We wish to analyze the data of federal maternal mortality deaths by utilizing a General linear mixed model with Poisson link as it is count data (book). We wish to see if ethnicity (a fixed effect) has any influence upon maternal death count by year(random effect). Instead of utilizing a weighted approach to see differences between groups (that one citation) we will use offset method with the log of births as the offset (find citaton)

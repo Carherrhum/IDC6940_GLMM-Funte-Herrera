@@ -68,6 +68,8 @@ We wish to analyze the data of federal maternal mortality deaths via VSRR Provis
 
 ## Methods
 
+#### Math Background
+
 GLMMs can be considered an extension of GLMs, wherein a GLM includes the addition of random effects, or an extension of Linear Mixed Models (LMMs), where a linear model with fixed and random effects is extended for non-normal distributions. 
 Let
 
@@ -93,6 +95,15 @@ The link function is $g(\cdot)$, where
 $$g(E(\mathbf{y}))=\boldsymbol{\eta}$$
 where $E(\mathbf{y})$ is the expectation of \mathbf{y}. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for count data, so we will use a log link function
 $$g(\cdot)=log_e(\cdot)$$
+
+#### Assumptions
+
+Before deciding to use a GLMM for our data, we had to check some assumptions (specific to our negative binomial distributed data). 
+
+- The response variable and the predictors have a linear relationship within the levels of random effects. 
+- The response variable is assumed to follow a negative binomial distribution, with $\sigma^2>\mu$.
+- The residuals and random effects are independent.
+- The random effects are assumed to be normally distributed, with mean 0 and variance $\sigma$.
 
 ## Analysis and Results
 

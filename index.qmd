@@ -134,9 +134,10 @@ library(dslabs)
 ```{r, warning=FALSE, echo=TRUE}
 
 df <- read.csv("data/VSRR_Provisional_Maternal_Death_Counts_and_Rates_20250726.csv")#loading data
-#variables- Maternal.Deaths
-#Live.Births
-#Sugroup- ethnicity and year of mother must be edited 
+#variables- Maternal.Deaths--outcome variable
+#Live.Births---offset variable since it is maternal deaths per live births
+#Subgroup- ethnicity and year of mother must be edited --- these are fixed
+#Year.of.Death---random effect variable
   
 
 ```

@@ -105,11 +105,16 @@ Before deciding to use a GLMM for our data, we had to check some assumptions (sp
 - The residuals and random effects are independent.
 - The random effects are assumed to be normally distributed, with mean 0 and variance $\sigma$.
 
+
+We installed package "lme4" to do analysis with the IDE R
+
 ## Analysis and Results
 
 ### Data Exploration and Visualization
 
 -   Describe your data sources and collection process.
+
+Data source is the VSSR Maternal Mortality. We collected by uploaded csv file into R. 
 
 -   Present initial findings and insights through visualizations.
 
@@ -127,23 +132,18 @@ library(dslabs)
 ```
 
 ```{r, warning=FALSE, echo=TRUE}
-# Load Data
-kable(head(murders))
 
-ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total)) 
-
-  ggplot1 + geom_point(aes(col=region), size = 4) +
-  geom_text_repel(aes(label=abb)) +
-  scale_x_log10() +
-  scale_y_log10() +
-  geom_smooth(formula = "y~x", method=lm,se = F)+
-  xlab("Populations in millions (log10 scale)") + 
-  ylab("Total number of murders (log10 scale)") +
-  ggtitle("US Gun Murders in 2010") +
-  scale_color_discrete(name = "Region")+
-      theme_bw()
+df <- read.csv("data/VSRR_Provisional_Maternal_Death_Counts_and_Rates_20250726.csv")#loading data
+#variables- Maternal.Deaths
+#Live.Births
+#Sugroup- ethnicity and year of mother must be edited 
   
 
+```
+
+```{r}
+install.packages("lme4")  #installing packages for analysis 
+library(lme4)
 ```
 
 ### Modeling and Results

@@ -198,7 +198,7 @@ summary_iqr_data #summarize iqr irrespective of year
 
 summary_yeariqr_data <-deaths_df%>%
   group_by(Year,Group_Subgroup) %>%
-  summarise (Maternal_Deaths_iqrbyYear_Value= IQR(Maternal_Deaths ,na.rm = TRUE),.groups = "drop")
+  summarise (Maternal_Deaths_iqryear= IQR(Maternal_Deaths ,na.rm = TRUE),.groups = "drop")
 summary_yeariqr_data #sumarize iqr with year
 ```
 
@@ -211,12 +211,139 @@ library(lme4)#initiate from library
 ```{r}
 #Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 glmm_model <- glmer(
-  Maternal_Deaths ~ Subgroup + (1 | Year),
-  offset = log(Live_Births),
+  Maternal_Deaths ~ Subgroup + (1 | Year) + offset(log(Live_Births)),
   data = test_df,
   family = poisson(link = "log")
 )
 glmm_model
+```
+```{r}
+glmm_model_nooffset <- glmer(
+  Maternal_Deaths ~ Subgroup + (1 | Year),
+  data = test_df,
+  family = poisson(link = "log")
+)
+glmm_model_nooffset
+```
+
+
+##check if model is overdisepersed'
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
+if (!require("performance")) install.packages("performance")#if required to install
+library(performance)
+```
+
+```{r}
+check_overdispersion(glmm_model)
+check_overdispersion(glmm_model_nooffset)
+
+
+
+```
+##OverDispersion is detected with Poisson model thus we must use negative binomial model
+
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
+if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
+library(glmmTMB)
+```
+
+```{r}
+glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~ Subgroup +  (1 | Year),
+  offset= log(Live_Births),
+  family = nbinom2,
+  data = test_df
+)
+summary(glmmodel_nb)
+```
+
+```{r}
+#no offset
+glmmodel_nb_nooffset <- glmmTMB(
+  Maternal_Deaths ~ Subgroup +  (1 | Year),
+  family = nbinom2,
+  data = test_df
+)
+summary(glmmodel_nb_nooffset)
+```
+
+```{r}
+ethnicity_only_df <- test_df %>%
+  filter(Subgroup %in% c(
+    "Asian, Non-Hispanic",
+    "Black, Non-Hispanic",
+    "White, Non-Hispanic",
+    "Hispanic",
+    "American Indian or Alaska Native, Non-Hispanic",
+    "Native Hawaiian or Other Pacific Islander, Non-Hispanic"
+  ))
+
+#ethnicity as factor
+ethnicity_only_df$Subgroup <- as.factor(ethnicity_only_df$Subgroup)
+ethnicity_only_df<-ethnicity_only_df %>%
+  rename(Ethnicity= Subgroup)
+
+```
+
+```{r}
+poissonmodel_glmm_ethnicity <- glmer(Maternal_Deaths ~ Ethnicity + offset(log(Live_Births)) + (1 | Year), 
+                              family = poisson(link = "log"), 
+                              data = ethnicity_only_df)
+poissonmodel_glmm_ethnicity
+```
+
+```{r}
+poissonmodel_glmm_ethnicity_nooffset <- glmer(Maternal_Deaths ~ Ethnicity  + (1 | Year), 
+                              family = poisson(link = "log"), 
+                              data = ethnicity_only_df)
+poissonmodel_glmm_ethnicity_nooffset
+
+```
+
+```{r}
+check_overdispersion(poissonmodel_glmm_ethnicity)
+check_overdispersion(poissonmodel_glmm_ethnicity_nooffset)
+```
+##overdispersion still detected
+
+```{r}
+
+##with offset
+ethnicityonly_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + (1 | Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = ethnicity_only_df
+)
+summary(ethnicityonly_glmmodel_nb)
+```
+```{r}
+
+###Without offset, Ethnicity as fixed effect, Year as random effect
+ethnicityonly_glmmodel_nb2 <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + (1 | Year),
+  family = nbinom2,
+  data = ethnicity_only_df
+)
+summary(ethnicityonly_glmmodel_nb2)
+```
+
+```{r setup, include=FALSE}
+#options(repos = c(CRAN = "https://cloud.r-project.org"))
+#if (!require("performance"))install.packages("performance")#if required to install
+#library(performance)
+
+#if (!require("DHARMa"))install.packages("DHARMa")#if required to install
+#library(DHARMa)
+
+#if (!require("sjPlot"))install.packages("sjPlot")#if required to install
+#library(sjPlot)
+```
+
+```{r}
+#performance::check_model(ethnicityonly_glmmodel_nb2)
 ```
 
 

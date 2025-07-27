@@ -149,12 +149,17 @@ df<-df%>%
 filtered_df<- df%>% filter(Maternal_Deaths > 0, Live_Births > 100) #Filtering out rare combinations
   
 test_df <- na.omit(filtered_df)
-deaths_df <-df %>%
+
+```
+
+```{r}
+#Summary Statistics
+deaths_df <-test_df %>%
   mutate(Group_Subgroup = paste(Group, Subgroup, sep = ": "))#mutating groups
 
 
 summary_table <- deaths_df %>%
-  group_by(Year, Group_Subgroup) %>% #grouped by year, Group (Age, Ethnicity), Subroup(listed the Group of Participant), and Maternal deaths for each Subgroup
+  group_by(Year, Group_Subgroup) %>% #grouped by year, Group (Age, Ethnicity), Subgroup(listed the Group of Participant), and Maternal deaths for each Subgroup
   summarise(Total_Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE), .groups = "drop")
 #ethnicity= "Hispanic" #"American Indian or Alaska Native, Non-Hispanic", "Asian, Non-Hispanic", "Black, Non-Hispanic", "Native Hawaiian or Other Pacific Islander, Non-Hispanic", "White, Non-Hispanic"
 #age = "Under 25 years"#"25-39 years"#"40 years and over"
@@ -197,11 +202,10 @@ summary_yeariqr_data <-deaths_df%>%
 summary_yeariqr_data #sumarize iqr with year
 ```
 
-```{r}
-install.packages("lme4")  #installing packages for analysis 
-```
-```{r}
-library(lme4)
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
+if (!require("lme4")) install.packages("lme4")#if required to install
+library(lme4)#initiate from library
 ```
 
 ```{r}

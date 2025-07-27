@@ -148,7 +148,7 @@ df<-df%>%
   
 filtered_df<- df%>% filter(Maternal_Deaths > 0, Live_Births > 100) #Filtering out rare combinations
   
-test_df <- na.omit(filtered_df)
+test_df <- na.omit(filtered_df)#filtered na
 
 ```
 

@@ -356,7 +356,7 @@ if (!require("DHARMa"))install.packages("DHARMa")#if required to install
 library(DHARMa)
 
 if (!require("sjPlot"))install.packages("sjPlot")#if required to install
-library(sjPlot)
+library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
 ```
 
 ```{r}
@@ -378,15 +378,23 @@ plot(sim4)
 ```
 
 ```{r}
-tm <-tab_model(ethnicityonly_glmmodel_nb)
-tm
-tm2<-tab_model(ethnicityonly_glmmodel_nb2)
-tm2
-tm3<-tab_model(age_glmmodel_nb)
-tm3
-tm4<-tab_model(age_glmmodel_nb2)
-tm4
+sjPlot::tab_model(ethnicityonly_glmmodel_nb)
+
 ```
+
+```{r}
+sjPlot::tab_model(ethnicityonly_glmmodel_nb2)#no offset
+```
+
+```{r}
+sjPlot::tab_model(age_glmmodel_nb)
+```
+
+```{r}
+sjPlot::tab_model(age_glmmodel_nb2)#no offset
+```
+
+
 
 ### Modeling and Results
 

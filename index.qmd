@@ -175,7 +175,7 @@ summary_mean_data #summarize mean maternal irrespective of year
 
 summary_yearmean_data <- deaths_df %>%
       group_by(Year, Group_Subgroup) %>%
-      summarise(Maternal_Deaths_Mean_Value = mean(Maternal_Deaths, na.rm = TRUE) ,.groups  ="drop")
+      summarise(Maternal_Deaths_MeanbyYear_Value = mean(Maternal_Deaths, na.rm = TRUE) ,.groups  ="drop")
 summary_yearmean_data #summarize mean with year
 
 summary_median_data <- deaths_df %>%
@@ -186,7 +186,7 @@ summary_median_data#summarize median maternal irrespective of year
 
 summary_yearmedian_data <- deaths_df %>%
       group_by(Year, Group_Subgroup) %>%
-  summarise(Maternal_Deaths_Median_Value= median(Maternal_Deaths, na.rm = TRUE) ,.groups = "drop")
+  summarise(Maternal_Deaths_MedianbyYear_Value= median(Maternal_Deaths, na.rm = TRUE) ,.groups = "drop")
 
 summary_yearmedian_data#summarize median with year
 
@@ -198,7 +198,7 @@ summary_iqr_data #summarize iqr irrespective of year
 
 summary_yeariqr_data <-deaths_df%>%
   group_by(Year,Group_Subgroup) %>%
-  summarise (Maternal_Deaths_iqr= IQR(Maternal_Deaths ,na.rm = TRUE),.groups = "drop")
+  summarise (Maternal_Deaths_iqrbyYear_Value= IQR(Maternal_Deaths ,na.rm = TRUE),.groups = "drop")
 summary_yeariqr_data #sumarize iqr with year
 ```
 

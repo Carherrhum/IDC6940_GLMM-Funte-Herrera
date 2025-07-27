@@ -3269,7 +3269,7 @@ Important
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>filtered_df<span class="ot">&lt;-</span> df<span class="sc">%&gt;%</span> <span class="fu">filter</span>(Maternal_Deaths <span class="sc">&gt;</span> <span class="dv">0</span>, Live_Births <span class="sc">&gt;</span> <span class="dv">100</span>) <span class="co">#Filtering out rare combinations</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>test_df <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(filtered_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>test_df <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(filtered_df)<span class="co">#filtered na</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -3330,12 +3330,12 @@ Important
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>summary_yearmean_data <span class="ot">&lt;-</span> deaths_df <span class="sc">%&gt;%</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>      <span class="fu">group_by</span>(Year, Group_Subgroup) <span class="sc">%&gt;%</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarise</span>(<span class="at">Maternal_Deaths_Mean_Value =</span> <span class="fu">mean</span>(Maternal_Deaths, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) ,<span class="at">.groups  =</span><span class="st">&quot;drop&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarise</span>(<span class="at">Maternal_Deaths_MeanbyYear_Value =</span> <span class="fu">mean</span>(Maternal_Deaths, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) ,<span class="at">.groups  =</span><span class="st">&quot;drop&quot;</span>)</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>summary_yearmean_data <span class="co">#summarize mean with year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 3
-    Year Group_Subgroup                                Maternal_Deaths_Mean_Va…¹
+    Year Group_Subgroup                                Maternal_Deaths_MeanbyY…¹
    &lt;int&gt; &lt;chr&gt;                                                             &lt;dbl&gt;
  1  2019 Age: 25-39 years                                                  501. 
  2  2019 Age: 40 years and over                                             94.9
@@ -3348,7 +3348,7 @@ Important
  9  2020 Age: 25-39 years                                                  569. 
 10  2020 Age: 40 years and over                                            113. 
 # ℹ 48 more rows
-# ℹ abbreviated name: ¹​Maternal_Deaths_Mean_Value</code></pre>
+# ℹ abbreviated name: ¹​Maternal_Deaths_MeanbyYear_Value</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -3377,13 +3377,13 @@ Important
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>summary_yearmedian_data <span class="ot">&lt;-</span> deaths_df <span class="sc">%&gt;%</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>      <span class="fu">group_by</span>(Year, Group_Subgroup) <span class="sc">%&gt;%</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Maternal_Deaths_Median_Value=</span> <span class="fu">median</span>(Maternal_Deaths, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) ,<span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Maternal_Deaths_MedianbyYear_Value=</span> <span class="fu">median</span>(Maternal_Deaths, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) ,<span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>summary_yearmedian_data<span class="co">#summarize median with year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 3
-    Year Group_Subgroup                                Maternal_Deaths_Median_…¹
+    Year Group_Subgroup                                Maternal_Deaths_Medianb…¹
    &lt;int&gt; &lt;chr&gt;                                                             &lt;dbl&gt;
  1  2019 Age: 25-39 years                                                  510. 
  2  2019 Age: 40 years and over                                             93  
@@ -3396,7 +3396,7 @@ Important
  9  2020 Age: 25-39 years                                                  566  
 10  2020 Age: 40 years and over                                            112. 
 # ℹ 48 more rows
-# ℹ abbreviated name: ¹​Maternal_Deaths_Median_Value</code></pre>
+# ℹ abbreviated name: ¹​Maternal_Deaths_MedianbyYear_Value</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -3424,24 +3424,25 @@ Important
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>summary_yeariqr_data <span class="ot">&lt;-</span>deaths_df<span class="sc">%&gt;%</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Year,Group_Subgroup) <span class="sc">%&gt;%</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span> (<span class="at">Maternal_Deaths_iqr=</span> <span class="fu">IQR</span>(Maternal_Deaths ,<span class="at">na.rm =</span> <span class="cn">TRUE</span>),<span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span> (<span class="at">Maternal_Deaths_iqrbyYear_Value=</span> <span class="fu">IQR</span>(Maternal_Deaths ,<span class="at">na.rm =</span> <span class="cn">TRUE</span>),<span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>summary_yeariqr_data <span class="co">#sumarize iqr with year</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 3
-    Year Group_Subgroup                                Maternal_Deaths_iqr
-   &lt;int&gt; &lt;chr&gt;                                                       &lt;dbl&gt;
- 1  2019 Age: 25-39 years                                            51.2 
- 2  2019 Age: 40 years and over                                       4.5 
- 3  2019 Age: Under 25 years                                          7.75
- 4  2019 Race and Hispanic origin: Asian, Non-Hispanic                4.5 
- 5  2019 Race and Hispanic origin: Black, Non-Hispanic               15.5 
- 6  2019 Race and Hispanic origin: Hispanic                           9   
- 7  2019 Race and Hispanic origin: White, Non-Hispanic               27.8 
- 8  2019 Total: Total                                                65.5 
- 9  2020 Age: 25-39 years                                            47.5 
-10  2020 Age: 40 years and over                                      22.2 
-# ℹ 48 more rows</code></pre>
+    Year Group_Subgroup                                Maternal_Deaths_iqrbyYe…¹
+   &lt;int&gt; &lt;chr&gt;                                                             &lt;dbl&gt;
+ 1  2019 Age: 25-39 years                                                  51.2 
+ 2  2019 Age: 40 years and over                                             4.5 
+ 3  2019 Age: Under 25 years                                                7.75
+ 4  2019 Race and Hispanic origin: Asian, Non-Hispanic                      4.5 
+ 5  2019 Race and Hispanic origin: Black, Non-Hispanic                     15.5 
+ 6  2019 Race and Hispanic origin: Hispanic                                 9   
+ 7  2019 Race and Hispanic origin: White, Non-Hispanic                     27.8 
+ 8  2019 Total: Total                                                      65.5 
+ 9  2020 Age: 25-39 years                                                  47.5 
+10  2020 Age: 40 years and over                                            22.2 
+# ℹ 48 more rows
+# ℹ abbreviated name: ¹​Maternal_Deaths_iqrbyYear_Value</code></pre>
 </div>
 </div>
 <div class="cell">

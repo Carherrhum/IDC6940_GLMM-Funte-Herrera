@@ -208,23 +208,8 @@ if (!require("lme4")) install.packages("lme4")#if required to install
 library(lme4)#initiate from library
 ```
 
-```{r}
-#Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
-glmm_model <- glmer(
-  Maternal_Deaths ~ Subgroup + (1 | Year) + offset(log(Live_Births)),
-  data = test_df,
-  family = poisson(link = "log")
-)
-glmm_model
-```
-```{r}
-glmm_model_nooffset <- glmer(
-  Maternal_Deaths ~ Subgroup + (1 | Year),
-  data = test_df,
-  family = poisson(link = "log")
-)
-glmm_model_nooffset
-```
+
+
 
 
 ##check if model is overdisepersed'
@@ -234,13 +219,7 @@ if (!require("performance")) install.packages("performance")#if required to inst
 library(performance)
 ```
 
-```{r}
-check_overdispersion(glmm_model)
-check_overdispersion(glmm_model_nooffset)
 
-
-
-```
 ##OverDispersion is detected with Poisson model thus we must use negative binomial model
 
 ```{r setup, include=FALSE}
@@ -249,62 +228,79 @@ if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
 library(glmmTMB)
 ```
 
-```{r}
-glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~ Subgroup +  (1 | Year),
-  offset= log(Live_Births),
-  family = nbinom2,
-  data = test_df
-)
-summary(glmmodel_nb)
-```
 
 ```{r}
-#no offset
-glmmodel_nb_nooffset <- glmmTMB(
-  Maternal_Deaths ~ Subgroup +  (1 | Year),
-  family = nbinom2,
-  data = test_df
-)
-summary(glmmodel_nb_nooffset)
-```
 
-```{r}
-ethnicity_only_df <- test_df %>%
-  filter(Subgroup %in% c(
+
+change_df <- test_df %>%
+    mutate(Subgroup = str_trim(Subgroup),
+  ethnicity= coalesce(case_when
+  (Subgroup %in% c(
     "Asian, Non-Hispanic",
     "Black, Non-Hispanic",
     "White, Non-Hispanic",
     "Hispanic",
     "American Indian or Alaska Native, Non-Hispanic",
     "Native Hawaiian or Other Pacific Islander, Non-Hispanic"
-  ))
+  ) ~ Subgroup,
+      TRUE ~ NA_character_
+    )),
+    
+    age_group = coalesce(case_when(
+      Subgroup %in% c("Under 25 years", "25-39 years", "40 years and over") ~ Subgroup,
+      TRUE ~ NA_character_
+    )),
+     total = case_when(
+      Subgroup == "Total" ~ "Total",
+      TRUE ~ NA_character_
+  )
 
-#ethnicity as factor
-ethnicity_only_df$Subgroup <- as.factor(ethnicity_only_df$Subgroup)
-ethnicity_only_df<-ethnicity_only_df %>%
-  rename(Ethnicity= Subgroup)
+ )
+change_df$ethnicity <- as.factor(change_df$ethnicity)
 
+change_df$age_group <- as.factor(change_df$age_group)
+
+change_df <- change_df %>%
+  mutate(Year = as.factor(Year))
 ```
 
 ```{r}
-poissonmodel_glmm_ethnicity <- glmer(Maternal_Deaths ~ Ethnicity + offset(log(Live_Births)) + (1 | Year), 
+poissonmodel_glmm_ethnicity <- glmer(Maternal_Deaths ~ ethnicity  + (1 | Year), 
+                              offset = log(Live_Births),
                               family = poisson(link = "log"), 
-                              data = ethnicity_only_df)
+                              data = change_df)
 poissonmodel_glmm_ethnicity
 ```
 
 ```{r}
-poissonmodel_glmm_ethnicity_nooffset <- glmer(Maternal_Deaths ~ Ethnicity  + (1 | Year), 
+poissonmodel_glmm_age <- glmer(Maternal_Deaths ~ age_group + (1|Year),
+                              offset=log(Live_Births),
                               family = poisson(link = "log"), 
-                              data = ethnicity_only_df)
+                              data = change_df)
+poissonmodel_glmm_age
+```
+
+
+```{r}
+poissonmodel_glmm_ethnicity_nooffset <- glmer(Maternal_Deaths ~ ethnicity + (1 | Year), 
+                              family = poisson(link = "log"), 
+                              data = change_df)
 poissonmodel_glmm_ethnicity_nooffset
 
 ```
+```{r}
+poissonmodel_glmm_age_nooffset <- glmer(Maternal_Deaths ~ age_group + (1|Year),
+                              family = poisson(link = "log"), 
+                              data = change_df)
+poissonmodel_glmm_age_nooffset
+```
+
 
 ```{r}
 check_overdispersion(poissonmodel_glmm_ethnicity)
 check_overdispersion(poissonmodel_glmm_ethnicity_nooffset)
+check_overdispersion(poissonmodel_glmm_age)
+check_overdispersion(poissonmodel_glmm_age_nooffset)
 ```
 ##overdispersion still detected
 
@@ -312,40 +308,85 @@ check_overdispersion(poissonmodel_glmm_ethnicity_nooffset)
 
 ##with offset
 ethnicityonly_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + (1 | Year),
+  Maternal_Deaths ~  ethnicity + (1 | Year),
   offset=log(Live_Births),
   family = nbinom2,
-  data = ethnicity_only_df
+  data = change_df
 )
 summary(ethnicityonly_glmmodel_nb)
 ```
+
+```{r}
+age_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  age_group+  (1 | Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = change_df
+)
+summary(age_glmmodel_nb)
+```
+
 ```{r}
 
 ###Without offset, Ethnicity as fixed effect, Year as random effect
 ethnicityonly_glmmodel_nb2 <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + (1 | Year),
+  Maternal_Deaths ~  ethnicity + (1 | Year),
   family = nbinom2,
-  data = ethnicity_only_df
+  data = change_df
 )
 summary(ethnicityonly_glmmodel_nb2)
 ```
 
+```{r}
+#without offset
+age_glmmodel_nb2 <- glmmTMB(
+  Maternal_Deaths ~  age_group + (1 | Year),
+  family = nbinom2,
+  data = change_df
+)
+summary(age_glmmodel_nb2)
+```
+
 ```{r setup, include=FALSE}
-#options(repos = c(CRAN = "https://cloud.r-project.org"))
-#if (!require("performance"))install.packages("performance")#if required to install
-#library(performance)
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+if (!require("performance"))install.packages("performance")#if required to install
+library(performance)
 
-#if (!require("DHARMa"))install.packages("DHARMa")#if required to install
-#library(DHARMa)
+if (!require("DHARMa"))install.packages("DHARMa")#if required to install
+library(DHARMa)
 
-#if (!require("sjPlot"))install.packages("sjPlot")#if required to install
-#library(sjPlot)
+if (!require("sjPlot"))install.packages("sjPlot")#if required to install
+library(sjPlot)
 ```
 
 ```{r}
-#performance::check_model(ethnicityonly_glmmodel_nb2)
+performance::check_model(ethnicityonly_glmmodel_nb)
+performance::check_model(age_glmmodel_nb)
+performance::check_model(ethnicityonly_glmmodel_nb2)
+performance::check_model(age_glmmodel_nb2)
+```
+```{r}
+#for non-normal error models
+sim <- simulateResiduals(ethnicityonly_glmmodel_nb)
+plot(sim)
+sim2 <- simulateResiduals(ethnicityonly_glmmodel_nb2)
+plot(sim2)
+sim3 <- simulateResiduals(age_glmmodel_nb)
+plot(sim3)
+sim4 <- simulateResiduals(age_glmmodel_nb2)
+plot(sim4)
 ```
 
+```{r}
+tm <-tab_model(ethnicityonly_glmmodel_nb)
+tm
+tm2<-tab_model(ethnicityonly_glmmodel_nb2)
+tm2
+tm3<-tab_model(age_glmmodel_nb)
+tm3
+tm4<-tab_model(age_glmmodel_nb2)
+tm4
+```
 
 ### Modeling and Results
 

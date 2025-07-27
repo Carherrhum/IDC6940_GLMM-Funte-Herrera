@@ -138,8 +138,18 @@ df <- read.csv("data/VSRR_Provisional_Maternal_Death_Counts_and_Rates_20250726.c
 #Live.Births---offset variable since it is maternal deaths per live births
 #Subgroup- ethnicity and year of mother must be edited --- these are fixed
 #Year.of.Death---random effect variable
-  
+#Summary
+#renaming columns
+df<-df%>% 
+  rename(Year= Year.of.Death, Month= Month.of.Death, Maternal_Deaths= Maternal.Deaths, Live_Births= Live.Births, Maternal_Mortality_Rate= Maternal.Mortality.Rate, Time_Period= Time.Period, Month_Ending_Date= Month.Ending.Date, Data_As_Of= Data.As.Of)
 
+summary_table <- df %>%
+  group_by(Year, Group, Subgroup) %>% #grouped by year, Group (Age, Ethnicity), Subroup(listed the Group of Participant), and Maternal deaths for each Subgroup
+  summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE), .groups = "drop")
+#ethnicity= "Hispanic" #"American Indian or Alaska Native, Non-Hispanic", "Asian, Non-Hispanic", "Black, Non-Hispanic",, "Native Hawaiian or Other Pacific Islander, Non-Hispanic", "White, Non-Hispanic"
+#age = "Under 25 years"#"25-39 years"#"40 years and over"
+
+summary_table
 ```
 
 ```{r}

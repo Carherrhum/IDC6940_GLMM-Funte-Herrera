@@ -220,7 +220,50 @@ deaths_df2<-deaths_df %>%
   filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))###filter out is total if ethnicity or age when total is true
 
 ```
+```{r}
+#Data Exploration Graphs
+df_ethnicity <- deaths_df %>%
+    filter(!is.na(Ethnicity)) %>%
+    group_by(Ethnicity) %>%
+    summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
+barplot(df_ethnicity$Maternal_Deaths,names.arg=c('Am Ind/Al Nat', 'Asian, NH','Black, NH','Hispanic','White,NH'),main="Maternal Mortality Totals 2019-2024 by Ethnicity")
 
+
+df_tot_year_ts<-ts(df_total_year$Maternal_Deaths, start = c(2019), frequency = 1)
+plot.ts(df_tot_year_ts,main='Yearly Total Maternal Deaths 2019-2024',xlab='Year',ylab='Maternal Deaths')
+
+
+total_ts <- deaths_df%>%
+  filter(Group=='Total')
+total_ts <- ts(total_ts$Maternal_Deaths,start=c(2019,1),frequency=12)
+plot.ts(total_ts,main='Monthly Total Maternal Deaths 2019-2024',ylab='Maternal Deaths',xlab='Time')  
+
+His <- filtered_df%>%
+  filter(Subgroup=='Hispanic')%>%
+  select(Maternal_Deaths)%>%
+  rename(Hispanic=Maternal_Deaths)
+bl <- filtered_df%>%
+  filter(Subgroup=='Black, Non-Hispanic')%>%
+  select(Maternal_Deaths)%>%
+  rename('Black_Non-Hispanic' = Maternal_Deaths)
+wh <- filtered_df%>%
+  filter(Subgroup=='White, Non-Hispanic')%>%
+  select(Maternal_Deaths)%>%
+  rename('White_Non-Hispanic'=Maternal_Deaths)
+as <- filtered_df%>%
+  filter(Subgroup=='Asian, Non-Hispanic')%>%
+  select(Maternal_Deaths)%>%
+  rename('Asian_Non-Hispanic'=Maternal_Deaths)
+aina <- df%>%
+  filter(Subgroup=='American Indian or Alaska Native, Non-Hispanic')%>%
+  select(Maternal_Deaths)%>% 
+  rename('American_Indian_or_Alaska_Native, Non-Hispanic'=Maternal_Deaths)
+ethn_ts <- bind_cols(His,bl,wh,as,aina) 
+ethn_ts[is.na(ethn_ts)] <- 5 #NA values are between 1 and 9 and left empty for privacy reasons, replaced with mean of 5
+ethn_ts <- ts(ethn_ts, start=c(2019,1), frequency = 12)
+plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity 2019-2024', ylab='Maternal Deaths',xlab='Time')
+
+```
 ```{r}
 options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
 if (!require("lme4")) install.packages("lme4")#if required to install

@@ -18,6 +18,7 @@ editor:
     wrap: 72
 ---
 
+
 Slides: [slides.html](slides.html){target="_blank"} ( Go to `slides.qmd`
 to edit)
 
@@ -138,6 +139,7 @@ Data source is the VSSR Maternal Mortality. We collected by uploaded csv file in
 
 A study was conducted to determine how...
 
+
 ```{r, warning=FALSE, echo=T, message=FALSE}
 # loading packages 
 library(tidyverse)
@@ -226,7 +228,9 @@ if (!require("lme4")) install.packages("lme4")#if required to install
 library(lme4)#initiate from library
 ```
 
+
 ##check if model is overdisepersed'
+
 ```{r}
 options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
 if (!require("performance")) install.packages("performance")#if required to install
@@ -234,16 +238,15 @@ library(performance)
 ```
 
 
+
 ##OverDispersion is detected with Poisson model thus we must use negative binomial model
+
 
 ```{r}
 options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
 if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
 library(glmmTMB)
 ```
-
-
-
 
 ```{r}
 poissonmodel_glmm_ethnicity <- glmer(Maternal_Deaths ~ Ethnicity  + (1 | Month/Year), 
@@ -266,10 +269,6 @@ poissonmodel_glmm_both <- glmer(Maternal_Deaths ~ Subgroup+ (1|Month/Year),
 poissonmodel_glmm_both
 ```
 
-
-
-
-
 ```{r}
 poissonmodel_glmm_ethnicity_nooffset <- glmer(Maternal_Deaths ~ Ethnicity + (1 |Month/ Year), 
                               family = poisson(link = "log"), 
@@ -285,14 +284,15 @@ poissonmodel_glmm_both_nooffset <- glmer(Maternal_Deaths ~ Subgroup + (1|Month/Y
 poissonmodel_glmm_both_nooffset
 ```
 
-
 ```{r}
 check_overdispersion(poissonmodel_glmm_ethnicity)
 check_overdispersion(poissonmodel_glmm_ethnicity_nooffset)
 check_overdispersion(poissonmodel_glmm_both)
 check_overdispersion(poissonmodel_glmm_both_nooffset)
 ```
+
 ##overdispersion still detected
+
 
 ```{r}
 
@@ -336,6 +336,7 @@ both_glmmodel_nb2 <- glmmTMB(
 )
 summary(both_glmmodel_nb2)
 ```
+
 ```{r}
 glmmodel_nb3 <- glmmTMB(
   Maternal_Deaths ~  Ethnicity +(1|Month/Year),
@@ -344,7 +345,6 @@ glmmodel_nb3 <- glmmTMB(
 )
 summary(glmmodel_nb3)
 ```
-
 
 ```{r setup, include=FALSE}
 options(repos = c(CRAN = "https://cloud.r-project.org"))
@@ -398,6 +398,7 @@ sjPlot::tab_model(both_glmmodel_nb2)#no offset
 sjPlot::tab_model(glmmodel_nb3)#no offset
 ```
 
+
 ### Modeling and Results
 
 -   Explain your data preprocessing and cleaning steps.
@@ -408,9 +409,11 @@ sjPlot::tab_model(glmmodel_nb3)#no offset
 
 -   **Tell a story about what the data reveals.**
 
+
 ```{r}
 
 ```
+
 
 ### Conclusion
 
@@ -419,3 +422,4 @@ sjPlot::tab_model(glmmodel_nb3)#no offset
 -   Discuss the implications of your results.
 
 ## References
+

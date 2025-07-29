@@ -260,7 +260,15 @@ aina <- df%>%
 ethn_ts <- bind_cols(His,bl,wh,as,aina) 
 ethn_ts[is.na(ethn_ts)] <- 5 #NA values are between 1 and 9 and left empty for privacy reasons, replaced with mean of 5
 ethn_ts <- ts(ethn_ts, start=c(2019,1), frequency = 12)
-plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity 2019-2024', ylab='Maternal Deaths',xlab='Time')
+colors=c('red','blue','green','yellow','orange')
+plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity 2019-2024', ylab='Maternal Deaths',xlab='Time',col=colors)
+legend("topleft",                     
+       legend = c("Hispanic", "Black, Non-Hispanic", "White, Non-Hispanic",'Asian, Non-Hispanic','American Indian, Alaska Native, Non-Hisp'),  # Labels
+       col = colors,                   
+       lty = 1,                        
+       lwd = 2,                     
+       bty = "n",
+       cex = 0.8)                      
 
 ```
 ```{r}

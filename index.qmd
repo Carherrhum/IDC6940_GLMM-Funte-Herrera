@@ -97,14 +97,13 @@ where $E(\mathbf{y})$ is the expectation of \mathbf{y}. The choice of link funct
 $$g(\cdot)=log_e(\cdot)$$
 In the GLMM model the  parameter estimates is solved by reducing the negative log likelihood functions[@salinas2023generalized]. The means or the least square means are derivative of the parameter estimates and are found on the model scale. The link function, negative binomial log link, will convert the mean estimates at the model scale to the data scale.
 Negative Binomial Distribution:
-$$\begin{equation}
+$$
 f(y;k,{\mu})=\frac{\Gamma(y+k)}{\Gamma(k)*(y+1)}\left(\frac{k}{\mu+k}\right)^{k}\left(1-\frac{k}{\mu+k}\right)^{y}
-\end{equation}
-\\$$
+$$
 Zuur writes that the negative binomial Distribution has two parameters ${\mu}$ and $k$ [@zuur2009mixed].
 The symbol ${\Gamma}$ is defined as ${\Gamma(y+1)=(y+1)!}$
 The Mean of Negative Binomial is given: $E(Y)= {\mu}$
-The Variance of Negative binomial is given; $Var(Y)= {\mu}+ {{\mu^2}/k}$, where second term determines the overdispersion, $k$ is called the dispersion parameter and indirectly determines overdispersion. If $k$ is significantly large relative to ${\mu^2}$ then the second term will approximate to zero and a Poisson distribution may as well be used. However, the smaller the $k$ value the larger the overdispersion may form and then negative binomial is the correct log link to utilize. 
+The Variance of Negative binomial is given; $Var(Y)= {\mu}+ \left(\frac{\mu^2}{k}\right)$, where second term determines the overdispersion, $k$ is called the dispersion parameter and indirectly determines overdispersion. If $k$ is significantly large relative to ${\mu^2}$ then the second term will approximate to zero and a Poisson distribution may as well be used. However, the smaller the $k$ value the larger the overdispersion may form and then negative binomial is the correct log link to utilize. 
 
 GLMM model process is 
 

@@ -128,15 +128,11 @@ Densities are seen as counts per volume and can be modeled with NB and offset va
 
 ### Data Exploration and Visualization
 
--   Describe your data sources and collection process.
-
-Data source is the VSSR Maternal Mortality. We collected by uploaded csv file into R. 
+The data we used come from the National Vital Statistics System, an organization that provides national data about births, deaths, marriages, divorces, and fetal deaths. It is a collaboration between the National Center for Health Statistics (NCHS) (a part of the CDC) and state vital records offices. {create citation https://www.cdc.gov/nchs/nvss/about_nvss.htm} This dataset is the Vital Statistics Rapid Release (VSRR) Provisional Maternal Death Counts and Rates, in the form of a .csv file. The dataset contains monthly death counts and death rates  from 2019 to 2024 by race and ethnicity, age and overall. Rates are maternal deaths per 100,000 live birthd. For this dataset, a maternal death is defined as "the death of a woman while pregnant or within 42 days of termination of pregnancy irrespective of the duration and the site of the pregnancy, from any cause related to or aggravated by the pregnancy or its management, but not from accidental or incidental causes." {create citation https://www.cdc.gov/nchs/nvss/vsrr/provisional-maternal-deaths-rates.htm}
 
 -   Present initial findings and insights through visualizations.
 
 -   Highlight unexpected patterns or anomalies.
-
-A study was conducted to determine how...
 
 ```{r, warning=FALSE, echo=T, message=FALSE}
 # loading packages 
@@ -148,7 +144,18 @@ library(dslabs)
 library(ggplot2)
 library(patchwork) # For combining plots
 library(ggpubr)
+library(DataExplorer) #For EDA
+options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
+if (!require("lme4")) install.packages("lme4")#if required to install
+library(lme4)
+##to check if model is overdispersed'
+if (!require("performance")) install.packages("performance")#if required to install
+library(performance)
+##Overdispersion is detected with Poisson model thus we must use negative binomial model
+if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
+library(glmmTMB)
 ```
+
 
 ```{r, warning=FALSE, echo=TRUE}
 
@@ -218,24 +225,44 @@ df_total_year
 deaths_df2<-deaths_df %>%
   filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))###filter out is total if ethnicity or age when total is true
 
+
 ```
 ```{r}
+plot_missing(deaths_df)
+```
+
+
+
+```{r}
 #Data Exploration Graphs
+colors=c('yellow','orange', 'blue', 'red', 'green')
 df_ethnicity <- deaths_df %>%
     filter(!is.na(Ethnicity)) %>%
     group_by(Ethnicity) %>%
     summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
-barplot(df_ethnicity$Maternal_Deaths,names.arg=c('Am Ind/Al Nat', 'Asian, NH','Black, NH','Hispanic','White,NH'),main="Maternal Mortality Totals 2019-2024 by Ethnicity")
+barplot(df_ethnicity$Maternal_Deaths,names.arg=c('Am In/Ala', 'Asian, NH','Black, NH','Hispanic','White,NH'),main="Maternal Mortality Totals 2019-2024 by Ethnicity",col=colors,xlab='Ethnicity',ylab='Maternal Deaths')
+
 
 
 df_tot_year_ts<-ts(df_total_year$Maternal_Deaths, start = c(2019), frequency = 1)
-plot.ts(df_tot_year_ts,main='Yearly Total Maternal Deaths 2019-2024',xlab='Year',ylab='Maternal Deaths')
+plot.ts(df_tot_year_ts,main='Yearly Total Maternal Deaths 2019-2024',xlab='Year',ylab='Maternal Deaths',col='navy')
 
 
-total_ts <- deaths_df%>%
+df_tot_year_rate <- deaths_df%>%
+  filter(Group=='Total')%>%
+  select(Maternal_Mortality_Rate)
+df_tot_year_rate_ts<-ts(df_tot_year_rate$Maternal_Mortality_Rate, start = c(2019,1), frequency = 12)
+plot.ts(df_tot_year_rate_ts,main='Monthly Total Maternal Mortality Rate 2019-2024',xlab='Year',ylab='Maternal Deaths per 100,000 Live Births',col='navy')
+
+
+
+
+total_df <- deaths_df%>%
   filter(Group=='Total')
-total_ts <- ts(total_ts$Maternal_Deaths,start=c(2019,1),frequency=12)
-plot.ts(total_ts,main='Monthly Total Maternal Deaths 2019-2024',ylab='Maternal Deaths',xlab='Time')  
+total_ts <- ts(total_df$Maternal_Deaths,start=c(2019,1),frequency=12)
+plot.ts(total_ts,main='Monthly Total Maternal Deaths 2019-2024',ylab='Maternal Deaths',xlab='Time',col='navy')  
+
+
 
 His <- filtered_df%>%
   filter(Subgroup=='Hispanic')%>%
@@ -258,9 +285,8 @@ aina <- df%>%
   select(Maternal_Deaths)%>% 
   rename('American_Indian_or_Alaska_Native, Non-Hispanic'=Maternal_Deaths)
 ethn_ts <- bind_cols(His,bl,wh,as,aina) 
-ethn_ts[is.na(ethn_ts)] <- 5 #NA values are between 1 and 9 and left empty for privacy reasons, replaced with mean of 5
 ethn_ts <- ts(ethn_ts, start=c(2019,1), frequency = 12)
-colors=c('red','blue','green','yellow','orange')
+colors=c('red','blue','green','orange','yellow')
 plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity 2019-2024', ylab='Maternal Deaths',xlab='Time',col=colors)
 legend("topleft",                     
        legend = c("Hispanic", "Black, Non-Hispanic", "White, Non-Hispanic",'Asian, Non-Hispanic','American Indian, Alaska Native, Non-Hisp'),  # Labels
@@ -270,30 +296,108 @@ legend("topleft",
        bty = "n",
        cex = 0.8)                      
 
+
+
+HisR <- filtered_df%>%
+  filter(Subgroup=='Hispanic')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename(Hispanic=Maternal_Mortality_Rate)
+blR <- filtered_df%>%
+  filter(Subgroup=='Black, Non-Hispanic')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename('Black_Non-Hispanic' = Maternal_Mortality_Rate)
+whR <- filtered_df%>%
+  filter(Subgroup=='White, Non-Hispanic')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename('White_Non-Hispanic'=Maternal_Mortality_Rate)
+asR <- filtered_df%>%
+  filter(Subgroup=='Asian, Non-Hispanic')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename('Asian_Non-Hispanic'=Maternal_Mortality_Rate)
+ainaR <- df%>%
+  filter(Subgroup=='American Indian or Alaska Native, Non-Hispanic')%>%
+  select(Maternal_Mortality_Rate)%>% 
+  rename('American_Indian_or_Alaska_Native, Non-Hispanic'=Maternal_Mortality_Rate)
+ethnR_ts <- bind_cols(HisR,blR,whR,asR,ainaR) 
+ethnR_ts <- ts(ethnR_ts, start=c(2019,1), frequency = 12)
+colors=c('red','blue','green','orange','yellow')
+plot.ts(ethnR_ts, plot.type='single',main='Monthly Maternal Mortality Rate by Ethnicity 2019-2024', ylab='Maternal Deaths per 100,000 Live Births',xlab='Time',col=colors)
+legend("topleft",                     
+       legend = c("Hispanic", "Black, Non-Hispanic", "White, Non-Hispanic",'Asian, Non-Hispanic','American Indian, Alaska Native, Non-Hisp'),  # Labels
+       col = colors,                   
+       lty = 1,                        
+       lwd = 2,                     
+       bty = "n",
+       cex = 0.7)            
+
+
+
+ageu25 <- deaths_df%>%
+  filter(Subgroup=='Under 25 years')%>%
+  select(Maternal_Deaths)%>%
+  rename('Under_25_years'=Maternal_Deaths)
+age25 <- filtered_df%>%
+  filter(Subgroup=='25-39 years')%>%
+  select(Maternal_Deaths)%>%
+  rename('25-39_years' = Maternal_Deaths)
+ageo40 <- filtered_df%>%
+  filter(Subgroup=='40 years and over')%>%
+  select(Maternal_Deaths)%>%
+  rename('40_years_and_over'=Maternal_Deaths)
+age_ts <- bind_cols(ageu25,age25,ageo40) 
+age_ts <- ts(age_ts, start=c(2019,1), frequency = 12)
+colors=c('red','blue','green')
+plot.ts(age_ts, plot.type='single',main='Monthly Maternal Deaths by Age Group 2019-2024', ylab='Maternal Deaths',xlab='Time',col=colors)
+legend("topleft",                     
+       legend = c("Under 25 Years", "25-39 Years", "40 Years and over"),  # Labels
+       col = colors,                   
+       lty = 1,                        
+       lwd = 2,                     
+       bty = "n",
+       cex = 0.8) 
+
+
+
+ageu25R <- deaths_df%>%
+  filter(Subgroup=='Under 25 years')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename('Under_25_years'=Maternal_Mortality_Rate)
+age25R <- filtered_df%>%
+  filter(Subgroup=='25-39 years')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename('25-39_years' = Maternal_Mortality_Rate)
+ageo40R <- filtered_df%>%
+  filter(Subgroup=='40 years and over')%>%
+  select(Maternal_Mortality_Rate)%>%
+  rename('40_years_and_over'=Maternal_Mortality_Rate)
+ageR_ts <- bind_cols(ageu25R,age25R,ageo40R) 
+ageR_ts <- ts(ageR_ts, start=c(2019,1), frequency = 12)
+colors=c('red','blue','green')
+plot.ts(ageR_ts, plot.type='single',main='Monthly Maternal Mortality Rate by Age Group 2019-2024', ylab='Maternal Deaths per 100,000 live Births',xlab='Time',col=colors)
+legend("topleft",                     
+       legend = c("Under 25 Years", "25-39 Years", "40 Years and over"),  # Labels
+       col = colors,                   
+       lty = 1,                        
+       lwd = 2,                     
+       bty = "n",
+       cex = 0.8) 
 ```
 ```{r}
-options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
-if (!require("lme4")) install.packages("lme4")#if required to install
-library(lme4)#initiate from library
+plot_histogram(deaths_df_ethnic$Maternal_Deaths,title='Histogram of Maternal Deaths - Ethnicity')
+plot_histogram(deaths_df_age$Maternal_Deaths, title='Histogram of Maternal Deaths - Age')
+plot_histogram(total_df$Maternal_Deaths,title='Histogram of Maternal Deaths - Total')
 ```
-
-##check if model is overdisepersed'
-```{r}
-options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
-if (!require("performance")) install.packages("performance")#if required to install
-library(performance)
-```
-
-
-##OverDispersion is detected with Poisson model thus we must use negative binomial model
 
 ```{r}
-options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
-if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
-library(glmmTMB)
+#check overdispersion by for ethnicity data
+deaths_df_ethnic %>% summarize(mean(Maternal_Deaths),
+var(Maternal_Deaths))
+#check overdispersion for age data
+deaths_df_age %>% summarize(mean(Maternal_Deaths),var(Maternal_Deaths))
+#check overdispersion for total data
+total_df %>% summarize(mean(Maternal_Deaths),
+var(Maternal_Deaths))
 ```
-
-
 
 
 ```{r}

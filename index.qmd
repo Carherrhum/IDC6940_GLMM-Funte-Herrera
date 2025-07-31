@@ -263,6 +263,7 @@ ethn_ts <- ts(ethn_ts, start=c(2019,1), frequency = 12)
 plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity 2019-2024', ylab='Maternal Deaths',xlab='Time')
 
 ```
+
 ```{r}
 options(repos = c(CRAN = "https://cloud.r-project.org"))#specify cran mirror
 if (!require("lme4")) install.packages("lme4")#if required to install

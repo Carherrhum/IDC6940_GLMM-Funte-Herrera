@@ -981,20 +981,7 @@ plot(ethnicitydobbs_effect2) +
   ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
 ```
 
-```{r}
-library(ggplot2)
 
-# Predicted values for Year by Ethnicity
-#year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
-
-# Plot
-#3333plot(year_eth) +
-  #labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
-   #    x = "Year", y = "Predicted Maternal Deaths") +
-  
-
-#theme_minimal()
-```
 
 ```{r}
 

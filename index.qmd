@@ -120,7 +120,7 @@ Before deciding to use a GLMM for our data, we had to check some assumptions (sp
 The Negative Binomial distribution is ideal for overdispersed count data in a fashion the poisson distribution cannot accommodate due Negative Binomial distribution's quadratic nature of mean-variance relationship. Overdispersion is a given for populations due to their heterogeneity that  aggregation processes such as  community clusters form with shared traits such as ethnicity. Our data includes community cluster groups such as ethnicity and age groups.  The negative binomial model is desirable also due to its easily intrepretable dispersion parameter as a measure of aggregation and its tractability due to closed form expression of probability mass function which helps in  convenient model inference and estimation.
 Such as our data is longitudinal a Negative Binomial GLMM is ideal since measurements are taken over time. We incoporate Year as a random effect because it could explain for variation in our model which could not be explained by our fixed effects such as ethnicity or age groups.
 
-WE shall analyze by using R[@R] and the packages lme4{@lme4} with function glmer to investigate poisson model or glmer.nb() for negative binomial model and the package glmmTMB{@glmmTMB} with the function, nbinom2(), for negative binomial model. The approximate parameterestimation method uses for glmmTMB uses AGQ or Laplace approximation with Wald Z significance test. The approximate parameter estimation method for lme4 default is Laplace approximation when no quadrature point is used but is pseudo-likelihood method in linearization,and integral approximation the and another estimation method is Gauss-Hermite quadrature to approximate the log-likelihood using numerical integration[@salinas2023generalized].
+WE shall analyze by using R[@R] and the packages lme4{@lme4} with function glmer to investigate poisson model or glmer.nb() for negative binomial model and the package glmmTMB{@glmmTMB} with the function, nbinom2(), for negative binomial model. The approximate parameter estimation method uses for glmmTMB uses AGQ or Laplace approximation with Wald Z significance test. The approximate parameter estimation method for lme4 default is Laplace approximation when no quadrature point is used but is pseudo-likelihood method in linearization,and integral approximation the and another estimation method is Gauss-Hermite quadrature to approximate the log-likelihood using numerical integration[@salinas2023generalized].
 
 Densities are seen as counts per volume and can be modeled with NB and offset variable[@zuur2009mixed]. We are investigation maternal deaths per live births and while we can use the variable rate, it would be less noisy if we used the offset variable log(Live Births). We can also model without the offset and utilize Akaike information criterion,AIC, to see which is the better model as the smaller the AIC would indicate a better model. A random effect could be month,year, or month/year. Fixed effects could be age groups, ethnicity, and perhaps year. Our choice of random or fixed effects are dependent on the question we which to investigate. 
 
@@ -177,6 +177,7 @@ test_df <- na.omit(filtered_df)#filtered na
 
 ```{r}
 #Summary Statistics
+
 deaths_df <-test_df %>%
   mutate(
     Ethnicity = case_when(
@@ -195,20 +196,43 @@ deaths_df <-test_df %>%
   Age_Group=as.factor(Age_Group))#mutating groups
 
 deaths_df_ethnic<-deaths_df %>%
-  filter(!is.na(Ethnicity))###filter out is total if ethnicity or age group are na
+  filter(!is.na(Ethnicity))%>%
+  mutate(Ethnicity = Subgroup)###filter out is total if ethnicity or age group are na
 
 deaths_df_age <-deaths_df %>%
-  filter(!is.na(Age_Group))
-merged_deaths_df <-  bind_rows(deaths_df_ethnic, deaths_df_age) %>%
-  distinct() 
-deaths_df2<-merged_deaths_df %>%
-  filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))
-##to get total deaths per year by ethnicity
-  df_ethnicity_year <- deaths_df %>%
-    filter(!is.na(Ethnicity), !is.na(Year)) %>%
-    group_by(Year, Ethnicity) %>%
-    summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
-  df_ethnicity_year
+  filter(!is.na(Age_Group)) %>%
+  mutate(Age_Group = Subgroup)
+
+
+merged_deaths_df <-  bind_rows(deaths_df_ethnic, deaths_df_age)  #merge both df
+
+#setting factor levels
+deaths_df3 <- merged_deaths_df %>%
+  mutate(
+    Ethnicity = factor(Ethnicity, levels = c(
+      "Asian, Non-Hispanic", "Black, Non-Hispanic", "White, Non-Hispanic",
+      "Hispanic", "American Indian or Alaska Native, Non-Hispanic",
+      "Native Hawaiian or Other Pacific Islander, Non-Hispanic", "Unknown"
+    )),
+    Age_Group = factor(Age_Group, levels = c("Under 25 years", "25-39 years", "40 years and over", "Unknown"))
+  )
+
+#mutating any NAs with unknown
+deaths_df3<- deaths_df3 %>%
+   mutate(
+    Ethnicity = replace_na(Ethnicity, "Unknown"),
+    Age_Group = replace_na(Age_Group, "Unknown")
+  )
+
+# make variable in which we combine Year and Month into a for of a date to create later variable, or use month ending date?
+deaths_df3$Date <- as.Date(paste(deaths_df3$Year, deaths_df3$Month, "01", sep = "-"))
+
+# Dobbs was decided June 24, 2022
+cutoff <- as.Date("2022-06-24")##when Roe v.Wade was overturned
+
+deaths_df3$Dobbs_Era <- ifelse(deaths_df3$Date < cutoff, "Pre-Dobbs", "Post-Dobbs")
+deaths_df3$Dobbs_Era <- factor(deaths_df3$Dobbs_Era, levels = c("Pre-Dobbs", "Post-Dobbs"))
+
 
 df_age_year <- deaths_df %>%
   filter(!is.na(Age_Group), !is.na(Year)) %>%
@@ -222,11 +246,17 @@ df_total_year <-deaths_df%>%
   summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
 df_total_year
 
-deaths_df2<-deaths_df %>%
-  filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))###filter out is total if ethnicity or age when total is true
+
+#deaths_cleaned <- deaths_df3 %>%
+#  filter(Age_Group != "Unknown",Ethnicity != "Unknown") %>%
+ # droplevels()
+
+#deaths_df2<-deaths_df %>%
+#  filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))###filter out is total if ethnicity or age when total is true
 
 
 ```
+
 ```{r}
 plot_missing(deaths_df)
 ```
@@ -382,6 +412,7 @@ legend("topleft",
        bty = "n",
        cex = 0.8) 
 ```
+
 ```{r}
 plot_histogram(deaths_df_ethnic$Maternal_Deaths,title='Histogram of Maternal Deaths - Ethnicity')
 plot_histogram(deaths_df_age$Maternal_Deaths, title='Histogram of Maternal Deaths - Age')
@@ -399,106 +430,126 @@ total_df %>% summarize(mean(Maternal_Deaths),
 var(Maternal_Deaths))
 ```
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
 ```{r}
-poissonmodel_glmm_ethnicity <- glmer(Maternal_Deaths ~ Ethnicity  + (1 | Month/Year), 
-                              offset = log(Live_Births),
-                              family = poisson(link = "log"), 
-                              data = deaths_df)
-poissonmodel_glmm_ethnicity
-```
-
-```{r}
-
-jack<-deaths_df2%>%filter(Group != "Total" & Subgroup != "Total")
-```
-
-```{r}
-poissonmodel_glmm_both <- glmer(Maternal_Deaths ~ Subgroup+ (1|Month/Year),
+poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
                               offset=log(Live_Births),
                               family = poisson(link = "log"), 
-                              data = jack)
-poissonmodel_glmm_both
-```
-
-
-
-
-
-```{r}
-poissonmodel_glmm_ethnicity_nooffset <- glmer(Maternal_Deaths ~ Ethnicity + (1 |Month/ Year), 
-                              family = poisson(link = "log"), 
-                              data = deaths_df)
-poissonmodel_glmm_ethnicity_nooffset
-
+                              data = deaths_df3)
+poissonmodel_glmm_all
 ```
 
 ```{r}
-poissonmodel_glmm_both_nooffset <- glmer(Maternal_Deaths ~ Subgroup + (1|Month/Year),#includes ethncity and age
-                              family = poisson(link = "log"), 
-                              data = jack)
-poissonmodel_glmm_both_nooffset
-```
+check_overdispersion(poissonmodel_glmm_all)
 
-
-```{r}
-check_overdispersion(poissonmodel_glmm_ethnicity)
-check_overdispersion(poissonmodel_glmm_ethnicity_nooffset)
-check_overdispersion(poissonmodel_glmm_both)
-check_overdispersion(poissonmodel_glmm_both_nooffset)
 ```
 ##overdispersion still detected
 
 ```{r}
 
-##with offset
-ethnicityonly_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + (1 |Month/Year),
+##with offset # all fixed effects
+all_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + Age_Group +Dobbs_Era+ (1|Year),
   offset=log(Live_Births),
   family = nbinom2,
-  data = deaths_df
+  data = deaths_df3
 )
-summary(ethnicityonly_glmmodel_nb)
+summary(all_glmmodel_nb)
+
 ```
 
 ```{r}
-both_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Subgroup+  (1 |Month/Year),
+ethnicity_agegroup_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity+ Age_Group + (1|Year),
   offset=log(Live_Births),
   family = nbinom2,
-  data = jack
+  data = deaths_df3
 )
-summary(both_glmmodel_nb)
+summary(ethnicity_agegroup_glmmodel_nb)
+```
+
+```{r}
+ethnicity_year_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + Dobbs_Era +  (1 |Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(ethnicity_year_glmmodel_nb)
+
+```
+
+```{r}
+ethnicity_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity  +  (1 |Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(ethnicity_glmmodel_nb)
+```
+
+```{r}
+year_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Dobbs_Era +  (1 |Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(year_glmmodel_nb)
 ```
 
 ```{r}
 
-###Without offset, Ethnicity as fixed effect, Year as random effect #no offset
-ethnicityonly_glmmodel_nb2 <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + (1 |Month/Year),
+##with no offset # all fixed effects
+allno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + Age_Group+ Dobbs_Era + (1 |Year),
   family = nbinom2,
-  data = deaths_df
+  data = deaths_df3
 )
-summary(ethnicityonly_glmmodel_nb2)
+summary(allno_glmmodel_nb)
+
 ```
 
 ```{r}
-#without offset
-both_glmmodel_nb2 <- glmmTMB(
-  Maternal_Deaths ~  Subgroup + (1 |Month/Year),
+ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity+ Age_Group + (1 |Year),
   family = nbinom2,
-  data = jack
+  data = deaths_df3
 )
-summary(both_glmmodel_nb2)
+summary(ethnicity_agegroupno_glmmodel_nb)
 ```
+
 ```{r}
-glmmodel_nb3 <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity +(1|Month/Year),
+ethnicity_yearno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + Dobbs_Era +  (1 |Year),
   family = nbinom2,
-  data = deaths_df
+  data = deaths_df3
 )
-summary(glmmodel_nb3)
+summary(ethnicity_yearno_glmmodel_nb)
 ```
+
+```{r}
+ethnicityno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity  +  (1 |Year),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(ethnicityno_glmmodel_nb)
+```
+
+```{r}
+yearno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Dobbs_Era +  (1 |Year),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(yearno_glmmodel_nb)
+```
+
 
 
 ```{r setup, include=FALSE}
@@ -513,45 +564,366 @@ if (!require("sjPlot"))install.packages("sjPlot")#if required to install
 library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
 ```
 
-```{r}
-performance::check_model(ethnicityonly_glmmodel_nb)
-performance::check_model(both_glmmodel_nb)
-performance::check_model(ethnicityonly_glmmodel_nb2)
-performance::check_model(both_glmmodel_nb2)
-```
+
+
 
 ```{r}
-#for non-normal error models
-sim <- simulateResiduals(ethnicityonly_glmmodel_nb)
-plot(sim)
-sim2 <- simulateResiduals(ethnicityonly_glmmodel_nb2)
-plot(sim2)
-sim3 <- simulateResiduals(both_glmmodel_nb)
-plot(sim3)
-sim4 <- simulateResiduals(both_glmmodel_nb2)
-plot(sim4)
-```
+performance::check_model(all_glmmodel_nb)#interesting
+performance::check_model(ethnicity_agegroup_glmmodel_nb)#interesting
+performance::check_model(ethnicity_year_glmmodel_nb)#no
+performance::check_model(ethnicity_glmmodel_nb)#no
+performance::check_model(year_glmmodel_nb)##no
+performance::check_model(allno_glmmodel_nb)##interesting
+performance::check_model(ethnicity_agegroupno_glmmodel_nb)#interesting
+performance::check_model(ethnicity_yearno_glmmodel_nb)#no
+performance::check_model(ethnicityno_glmmodel_nb)# no
+performance::check_model(yearno_glmmodel_nb)#no
 
-```{r}
-sjPlot::tab_model(ethnicityonly_glmmodel_nb)
+#performance::check_model(all2_glmmodel_nb)#interesting
+#performance::check_model(eage_glmmodel_nb)
+#performance::check_model(allno2glmmmodel)#interesting
 
 ```
 
 ```{r}
-sjPlot::tab_model(ethnicityonly_glmmodel_nb2)#no offset
+performance::r2(all_glmmodel_nb)
+check_singularity(all_glmmodel_nb)
+
+performance::r2(ethnicity_agegroup_glmmodel_nb)
+check_singularity(ethnicity_agegroup_glmmodel_nb)
+
+performance::r2(allno_glmmodel_nb)
+check_singularity(allno_glmmodel_nb)
+
+performance::r2(ethnicity_agegroupno_glmmodel_nb)
+check_singularity(ethnicity_agegroupno_glmmodel_nb)
+
+```
+
+
+```{r}
+resid_pearson <- residuals(all_glmmodel_nb, type = "pearson")
+plot(resid_pearson ~ fitted(all_glmmodel_nb), main = "Pearson residuals vs Fitted")
+abline(h = 0, col = "red")
 ```
 
 ```{r}
-sjPlot::tab_model(both_glmmodel_nb)
+overdisp_fun <- function(all_glmmodel_nb) {
+  rdf <- df.residual(all_glmmodel_nb)
+  rp <- residuals(all_glmmodel_nb, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+
+overdisp_fun(all_glmmodel_nb)
+
+#ratio is around 1 which is good and not too indicative of overdispersion
+#pp-value is greater that P<0.005 so that means there is no significant overdispersion
 ```
 
 ```{r}
-sjPlot::tab_model(both_glmmodel_nb2)#no offset
+
+arm::binnedplot(fitted(all_glmmodel_nb), 
+           residuals(all_glmmodel_nb, type = "response"), 
+           main = "Binned residual plot")
+# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
 ```
 
 ```{r}
-sjPlot::tab_model(glmmodel_nb3)#no offset
+ranef(all_glmmodel_nb)$cond
 ```
+
+
+
+
+
+```{r}
+library(ggplot2)
+
+
+re <- ranef(all_glmmodel_nb)
+cond_re <- re$cond
+year_re <- as.data.frame(cond_re$Year)
+year_re$Year <- rownames(year_re)
+
+ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Random Effect Intercepts by Year",
+       x = "Year",
+       y = "Random Effect Estimate (Intercept)") +
+  theme_minimal()
+
+
+#dashed zero is the overall random intercept
+# points above zero - years with above average random effect
+#points below zero- years below average random effect
+```
+
+
+```{r}
+performance::check_collinearity(all_glmmodel_nb)
+performance::check_model(all_glmmodel_nb, verbose = TRUE, residual_type = "normal")
+```
+
+
+```{r}
+sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random effects
+```
+
+```{r}
+sjPlot::tab_model(all_glmmodel_nb)
+
+```
+
+
+```{r}
+resid_pearson <- residuals(ethnicity_agegroup_glmmodel_nb, type = "pearson")
+plot(resid_pearson ~ fitted(ethnicity_agegroup_glmmodel_nb), main = "Pearson residuals vs Fitted")
+abline(h = 0, col = "red")
+```
+
+```{r}
+overdisp_fun <- function(ethnicity_agegroup_glmmodel_nb) {
+  rdf <- df.residual(ethnicity_agegroup_glmmodel_nb)
+  rp <- residuals(ethnicity_agegroup_glmmodel_nb, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+
+overdisp_fun(ethnicity_agegroup_glmmodel_nb)
+
+#ratio is around 1 which is good and not too indicative of overdispersion
+#pp-value is greater that P<0.005 so that means there is no significant overdispersion
+```
+
+```{r}
+
+arm::binnedplot(fitted(ethnicity_agegroup_glmmodel_nb), 
+           residuals(ethnicity_agegroup_glmmodel_nb, type = "response"), 
+           main = "Binned residual plot")
+# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
+```
+
+
+```{r}
+ranef(ethnicity_agegroup_glmmodel_nb)$cond
+```
+
+
+
+
+
+```{r}
+library(ggplot2)
+
+
+re <- ranef(ethnicity_agegroup_glmmodel_nb)
+cond_re <- re$cond
+year_re <- as.data.frame(cond_re$Year)
+year_re$Year <- rownames(year_re)
+
+ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Random Effect Intercepts by Year",
+       x = "Year",
+       y = "Random Effect Estimate (Intercept)") +
+  theme_minimal()
+
+
+#dashed zero is the overall random intercept
+# points above zero - years with above average random effect
+#points below zero- years below average random effect
+```
+
+
+```{r}
+performance::check_collinearity(ethnicity_agegroup_glmmodel_nb)
+performance::check_model(ethnicity_agegroup_glmmodel_nb, verbose = TRUE, residual_type = "normal")
+```
+
+
+```{r}
+sjPlot::plot_model(ethnicity_agegroup_glmmodel_nb, type = "re") #no extreme points with random effects
+
+```
+
+```{r}
+
+sjPlot::tab_model(ethnicity_agegroup_glmmodel_nb)
+
+```
+
+
+
+```{r}
+resid_pearson <- residuals(allno_glmmodel_nb, type = "pearson")
+plot(resid_pearson ~ fitted(allno_glmmodel_nb), main = "Pearson residuals vs Fitted")
+abline(h = 0, col = "red")
+```
+
+```{r}
+overdisp_fun <- function(allno_glmmodel_nb) {
+  rdf <- df.residual(allno_glmmodel_nb)
+  rp <- residuals(allno_glmmodel_nb, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+
+overdisp_fun(allno_glmmodel_nb)
+
+#ratio is around 1 which is good and not too indicative of overdispersion
+#pp-value is greater that P<0.005 so that means there is no significant overdispersion
+```
+
+```{r}
+
+arm::binnedplot(fitted(allno_glmmodel_nb), 
+           residuals(allno_glmmodel_nb, type = "response"), 
+           main = "Binned residual plot")
+# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
+```
+
+
+```{r}
+ranef(allno_glmmodel_nb)$cond
+```
+
+
+
+
+
+```{r}
+library(ggplot2)
+
+
+re <- ranef(allno_glmmodel_nb)
+cond_re <- re$cond
+year_re <- as.data.frame(cond_re$Year)
+year_re$Year <- rownames(year_re)
+
+ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Random Effect Intercepts by Year",
+       x = "Year",
+       y = "Random Effect Estimate (Intercept)") +
+  theme_minimal()
+
+
+#dashed zero is the overall random intercept
+# points above zero - years with above average random effect
+#points below zero- years below average random effect
+```
+
+
+```{r}
+performance::check_collinearity(allno_glmmodel_nb)
+
+performance::check_model(allno_glmmodel_nb, verbose = TRUE, residual_type = "normal")
+```
+
+
+
+
+
+```{r}
+sjPlot::tab_model(allno_glmmodel_nb)#no offset
+```
+
+
+
+
+```{r}
+resid_pearson <- residuals(ethnicity_agegroupno_glmmodel_nb, type = "pearson")
+plot(resid_pearson ~ fitted(ethnicity_agegroupno_glmmodel_nb), main = "Pearson residuals vs Fitted")
+abline(h = 0, col = "red")
+```
+
+```{r}
+overdisp_fun <- function(ethnicity_agegroupno_glmmodel_nb) {
+  rdf <- df.residual(ethnicity_agegroupno_glmmodel_nb)
+  rp <- residuals(ethnicity_agegroupno_glmmodel_nb, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+
+overdisp_fun(ethnicity_agegroupno_glmmodel_nb)
+
+#ratio is around 1 which is good and not too indicative of overdispersion
+#pp-value is greater that P<0.005 so that means there is no significant overdispersion
+```
+
+```{r}
+
+arm::binnedplot(fitted(ethnicity_agegroupno_glmmodel_nb), 
+           residuals(ethnicity_agegroupno_glmmodel_nb, type = "response"), 
+           main = "Binned residual plot")
+# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
+```
+
+
+```{r}
+ranef(ethnicity_agegroupno_glmmodel_nb)$cond
+```
+
+
+
+
+
+```{r}
+library(ggplot2)
+
+
+re <- ranef(ethnicity_agegroupno_glmmodel_nb)
+cond_re <- re$cond
+year_re <- as.data.frame(cond_re$Year)
+year_re$Year <- rownames(year_re)
+
+ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Random Effect Intercepts by Year",
+       x = "Year",
+       y = "Random Effect Estimate (Intercept)") +
+  theme_minimal()
+
+
+#dashed zero is the overall random intercept
+# points above zero - years with above average random effect
+#points below zero- years below average random effect
+```
+
+
+```{r}
+performance::check_collinearity(ethnicity_agegroupno_glmmodel_nb)
+
+performance::check_model(ethnicity_agegroupno_glmmodel_nb, verbose = TRUE, residual_type = "normal")
+
+
+```
+
+
+```{r}
+sjPlot::tab_model(ethnicity_agegroupno_glmmodel_nb)
+```
+
+
+
+
+```{r}
+##Comare AIC and see who has influential points and then we find best model
+```
+
 
 ### Modeling and Results
 
@@ -563,9 +935,7 @@ sjPlot::tab_model(glmmodel_nb3)#no offset
 
 -   **Tell a story about what the data reveals.**
 
-```{r}
 
-```
 
 ### Conclusion
 

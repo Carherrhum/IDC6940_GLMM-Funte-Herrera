@@ -180,7 +180,7 @@ test_df <- filtered_df%>%
 ```{r}
 #Summary Statistics
 
-deaths_df <-test_df %>%
+deaths_df <-df %>%
   mutate(
     Ethnicity = case_when(
       Group == "Race and Hispanic origin" ~ Subgroup,
@@ -249,12 +249,7 @@ df_total_year <-deaths_df%>%
 df_total_year
 
 
-#deaths_cleaned <- deaths_df3 %>%
-#  filter(Age_Group != "Unknown",Ethnicity != "Unknown") %>%
- # droplevels()
 
-#deaths_df2<-deaths_df %>%
-#  filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))###filter out is total if ethnicity or age when total is true
 
 
 ```
@@ -437,6 +432,7 @@ var(Maternal_Deaths))
 =======
 
 >>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
+
 ```{r}
 poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
                               offset=log(Live_Births),
@@ -453,20 +449,11 @@ check_overdispersion(poissonmodel_glmm_all)
 ```
 ##overdispersion still detected
 
-```{r}
 
-var(deaths_df3$Maternal_Deaths)##variance is indeed greater than mean so Negative Binomial moel would be appropriate
-mean(deaths_df3$Maternal_Deaths)
-```
+
 
 
 ```{r}
-install.packages("gglmmTMB")
-```
-
-
-```{r}
-
 ##with offset # all fixed effects
 all_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity + Age_Group +Dobbs_Era+ (1|Year),
@@ -477,6 +464,10 @@ all_glmmodel_nb <- glmmTMB(
 summary(all_glmmodel_nb)
 
 ```
+
+
+
+
 
 ```{r}
 ethnicity_agegroup_glmmodel_nb <- glmmTMB(
@@ -491,7 +482,7 @@ summary(ethnicity_agegroup_glmmodel_nb)
 
 ```{r}
 
-##with no offset # all fixed effects
+##with no offset # all fixed effects #with not offset we can just use maternal mmortality rate per 100,0000 live_births
 allno_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity + Age_Group+ Dobbs_Era + (1 |Year),
   family = nbinom2,
@@ -509,6 +500,7 @@ ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
 )
 summary(ethnicity_agegroupno_glmmodel_nb)
 ```
+
 
 
 
@@ -539,6 +531,8 @@ bbmle::AICtab(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb,
 
 ```
 
+It is said that even though not using offset has lower A1c it is incorrect model because it does not include live births or correct variance structure so I will be testing both. While AIC for not including offset is lower, assumptions are violated. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure even if AIC is higher.
+
 ```{r}
 
 
@@ -553,20 +547,9 @@ MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_
 
 
 
-```{r}
-performance::check_model(all_glmmodel_nb, verbose = TRUE,residual_type = "normal")#interesting
-performance::r2(all_glmmodel_nb)
-check_singularity(all_glmmodel_nb)#random effect is not a singularity
-check_collinearity(all_glmmodel_nb)
 
-```
 
-```{r}
-performance::check_model(ethnicity_agegroup_glmmodel_nb, verbose=TRUE, residual_type = "normal")#interesting
-performance::r2(ethnicity_agegroup_glmmodel_nb)
-check_singularity(ethnicity_agegroup_glmmodel_nb)
-check_collinearity(ethnicity_agegroup_glmmodel_nb)
-```
+
 
 ```{r}
 performance::check_model(allno_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
@@ -577,170 +560,32 @@ check_collinearity(allno_glmmodel_nb)
 
 
 
+`
 ```{r}
-performance::check_model(ethnicity_agegroupno_glmmodel_nb, verbose=TRUE, residual_type = "normal")#interesting
-performance::r2(ethnicity_agegroupno_glmmodel_nb)
-check_singularity(ethnicity_agegroupno_glmmodel_nb)
-check_collinearity(ethnicity_agegroupno_glmmodel_nb)
+performance::check_model(all_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
+performance::r2(all_glmmodel_nb)
+check_singularity(all_glmmodel_nb)
+check_collinearity(all_glmmodel_nb)
 ```
 
-
-
-
-
-```{r}
-resid_pearson <- residuals(all_glmmodel_nb, type = "pearson")
-plot(resid_pearson ~ fitted(all_glmmodel_nb), main = "Pearson residuals vs Fitted")
-abline(h = 0, col = "red")
-```
-
-```{r}
-overdisp_fun <- function(all_glmmodel_nb) {
-  rdf <- df.residual(all_glmmodel_nb)
-  rp <- residuals(all_glmmodel_nb, type = "pearson")
-  Pearson.chisq <- sum(rp^2)
-  prat <- Pearson.chisq / rdf
-  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
-  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
-}
-
-overdisp_fun(all_glmmodel_nb)
-
-#ratio is around 1 which is good and not too indicative of overdispersion
-#pp-value is greater that P<0.005 so that means there is no significant overdispersion
-```
-
-```{r}
-
-arm::binnedplot(fitted(all_glmmodel_nb), 
-           residuals(all_glmmodel_nb, type = "response"), 
-           main = "Binned residual plot")
-# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
-```
-
-```{r}
-ranef(all_glmmodel_nb)$cond
-```
-
-
-
-
-
-```{r}
-re <- ranef(all_glmmodel_nb)
-cond_re <- re$cond
-year_re <- as.data.frame(cond_re$Year)
-year_re$Year <- rownames(year_re)
-
-ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(title = "Random Effect Intercepts by Year",
-       x = "Year",
-       y = "Random Effect Estimate (Intercept)") +
-  theme_minimal()
-
-
-#dashed zero is the overall random intercept
-# points above zero - years with above average random effect
-#points below zero- years below average random effect
-```
-
-
-
-
-
-```{r}
-sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random effects
-```
-
-```{r}
-sjPlot::tab_model(all_glmmodel_nb)
-
-```
-
-
-```{r}
-resid_pearson <- residuals(ethnicity_agegroup_glmmodel_nb, type = "pearson")
-plot(resid_pearson ~ fitted(ethnicity_agegroup_glmmodel_nb), main = "Pearson residuals vs Fitted")
-abline(h = 0, col = "red")
-```
-
-```{r}
-overdisp_fun <- function(ethnicity_agegroup_glmmodel_nb) {
-  rdf <- df.residual(ethnicity_agegroup_glmmodel_nb)
-  rp <- residuals(ethnicity_agegroup_glmmodel_nb, type = "pearson")
-  Pearson.chisq <- sum(rp^2)
-  prat <- Pearson.chisq / rdf
-  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
-  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
-}
-
-overdisp_fun(ethnicity_agegroup_glmmodel_nb)
-
-#ratio is around 1 which is good and not too indicative of overdispersion
-#pp-value is greater that P<0.005 so that means there is no significant overdispersion
-```
-
-```{r}
-arm::binnedplot(fitted(ethnicity_agegroup_glmmodel_nb), 
-           residuals(ethnicity_agegroup_glmmodel_nb, type = "response"), 
-           main = "Binned residual plot")
-# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
-```
-
-
-```{r}
-ranef(ethnicity_agegroup_glmmodel_nb)$cond
-```
-
-
-
-
-
-```{r}
-re <- ranef(ethnicity_agegroup_glmmodel_nb)
-cond_re <- re$cond
-year_re <- as.data.frame(cond_re$Year)
-year_re$Year <- rownames(year_re)
-
-ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(title = "Random Effect Intercepts by Year",
-       x = "Year",
-       y = "Random Effect Estimate (Intercept)") +
-  theme_minimal()
-
-
-#dashed zero is the overall random intercept
-# points above zero - years with above average random effect
-#points below zero- years below average random effect
-```
-
-
-
-
-
-```{r}
-sjPlot::plot_model(ethnicity_agegroup_glmmodel_nb, type = "re") #no extreme points with random effects
-
-```
-
-```{r}
-
-sjPlot::tab_model(ethnicity_agegroup_glmmodel_nb)
-
-```
 
 
 
 
 ```{r}
 resid_pearson <- residuals(allno_glmmodel_nb, type = "pearson")
-plot(resid_pearson ~ fitted(allno_glmmodel_nb), main = "Pearson residuals vs Fitted")
+plot(resid_pearson ~ fitted(allno_glmmodel_nb), main = "Pearson residuals vs Fitted for model without offset")
 abline(h = 0, col = "red")
 ```
+
+
+```{r}
+
+resid_pearson <- residuals(all_glmmodel_nb, type = "pearson")
+plot(resid_pearson ~ fitted(all_glmmodel_nb), main = "Pearson residuals vs Fitted for model with offset")
+abline(h = 0, col = "red")
+```
+
 
 ```{r}
 overdisp_fun <- function(allno_glmmodel_nb) {
@@ -760,16 +605,38 @@ overdisp_fun(allno_glmmodel_nb)
 
 ```{r}
 
-arm::binnedplot(fitted(allno_glmmodel_nb), 
-           residuals(allno_glmmodel_nb, type = "response"), 
-           main = "Binned residual plot")
-# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
+overdisp_fun <- function(all_glmmodel_nb) {
+  rdf <- df.residual(all_glmmodel_nb)
+  rp <- residuals(all_glmmodel_nb, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+
+overdisp_fun(all_glmmodel_nb)
+
+#ratio is around 1 which is good and not too indicative of overdispersion
+#pp-value is greater that P<0.005 so that means there is no significant overdispersion
 ```
 
 
 ```{r}
-ranef(allno_glmmodel_nb)$cond
+
+arm::binnedplot(fitted(allno_glmmodel_nb), 
+           residuals(allno_glmmodel_nb, type = "response"), 
+           main = "Binned residual plot in model without offset")
+# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
 ```
+```{r}
+arm::binnedplot(fitted(all_glmmodel_nb), 
+           residuals(all_glmmodel_nb, type = "response"), 
+           main = "Binned residual plot in model with offset")
+# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
+```
+
+
+
 
 
 
@@ -784,7 +651,7 @@ year_re$Year <- rownames(year_re)
 ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
   geom_point(size = 3) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(title = "Random Effect Intercepts by Year",
+  labs(title = "Random Effect Intercepts by Year in model without offset",
        x = "Year",
        y = "Random Effect Estimate (Intercept)") +
   theme_minimal()
@@ -795,6 +662,58 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
+
+```{r}
+re <- ranef(all_glmmodel_nb)
+cond_re <- re$cond
+year_re <- as.data.frame(cond_re$Year)
+year_re$Year <- rownames(year_re)
+
+ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Random Effect Intercepts by Year in model with offset",
+       x = "Year",
+       y = "Random Effect Estimate (Intercept)") +
+  theme_minimal()
+
+
+#dashed zero is the overall random intercept
+# points above zero - years with above average random effect
+#points below zero- years below average random effect
+```
+
+
+```{r}
+sjPlot::plot_model(allno_glmmodel_nb, type = "re") #no extreme points with random effects
+```
+
+```{r}
+sjPlot::tab_model(allno_glmmodel_nb)##coefficients of not using offset is not good and can effect estimates
+
+```
+
+```{r}
+sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random effects #with offset
+```
+
+```{r}
+sjPlot::tab_model(all_glmmodel_nb)#withh offset
+
+```
+```{r}
+# pseudo overdispersion test
+overdisp_fun <- function(model) {
+  rdf <- df.residual(model)
+  rp <- residuals(model, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+overdisp_fun(all_glmmodel_nb )
+overdisp_fun(allno_glmmodel_nb)#slightly worse
+```
 
 
 ```{r}
@@ -808,29 +727,28 @@ fitted_vals <- predict(allno_glmmodel_nb,type = "response")
 x <- jitter(fitted_vals)
 y<-resid_vals
 
-plot(x, y, main = "Residuals vs Fitted with LOESS") #LOESS is smoother line
+plot(x, y, main = "Residuals vs Fitted with LOESS model without offset") #LOESS is smoother line
 abline(h = 0, col = "red")#where residuals equal zero
 lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
 
 
 ```
-
 ```{r}
-#Checking independence between residuals and random effects
-#year residual mean centered around 0 with no clear pattern or group #Assumption is upheld
-resid_vals <- residuals(allno_glmmodel_nb, type = "pearson")
 
 
-library(ggplot2)
+#The response variable and the predictors have a linear relationship within the levels of random effect
+# Base partial residuals (approximate)
 
+resid_vals<-resid(all_glmmodel_nb,type = "pearson")
+fitted_vals <- predict(all_glmmodel_nb,type = "response")
 
-#residuals centered around zero- central tendency
-ggplot(deaths_df3, aes(x = as.factor(Year), y = resid_vals)) +
-  geom_boxplot() +
-  geom_jitter(width = 0.2, alpha = 0.5) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  labs(title = "Residuals by Year", y = "Residuals", x = "Year")
-#points are scattered with no discernible pattern
+x <- jitter(fitted_vals)
+y<-resid_vals
+
+plot(x, y, main = "Residuals vs Fitted with LOESS model with offset") #LOESS is smoother line
+abline(h = 0, col = "red")#where residuals equal zero
+lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
+
 
 ```
 
@@ -844,9 +762,9 @@ ggplot(deaths_df3, aes(x = as.factor(Year), y = resid_vals)) +
 
 re_year <- ranef(allno_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
 
-qqnorm(re_year, main = "Q-Q Plot of Random Effect (Year)")
+qqnorm(re_year, main = "Q-Q Plot of Random Effect of model without offset (Year)")
 qqline(re_year, col = "red")#points should roughly lie by this line if normal
-hist(re_year, main = "Histogram of Random Effects", xlab = "Random effect (Year)")
+hist(re_year, main = "Histogram of Random Effectsof model without offset", xlab = "Random effect (Year)")
 
 df_re <- data.frame(re = re_year)
 
@@ -854,7 +772,30 @@ ggplot(df_re, aes(x = re_year)) +
   geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
   stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
                 color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
-  ggtitle("Density of Random Effect (Year) with Normal Curve")
+  ggtitle("Density of Random Effect f model without offset (Year) with Normal Curve")
+
+#since most of blue density is within red line 
+#The random effect of year is approximately normal with some mild deviations which is common with count models 
+```
+```{r}
+#Normality of Random effects
+
+#Points fall close to red line so random effects are approximately normal
+
+
+re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
+
+qqnorm(re_year, main = "Q-Q Plot of Random Effect of model without offset (Year)")
+qqline(re_year, col = "red")#points should roughly lie by this line if normal
+hist(re_year, main = "Histogram of Random Effectsof model without offset", xlab = "Random effect (Year)")
+
+df_re <- data.frame(re = re_year)
+
+ggplot(df_re, aes(x = re_year)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
+  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
+                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
+  ggtitle("Density of Random Effect f model without offset (Year) with Normal Curve")
 
 #since most of blue density is within red line 
 #The random effect of year is approximately normal with some mild deviations which is common with count models 
@@ -872,88 +813,250 @@ ggplot(df_re, aes(x = re_year)) +
 re_year <- ranef(allno_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
 
 
-qqnorm(re_year, main = "Q-Q Plot of Random Intercepts (Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in odel without offset(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
 qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
 
 
 
 ```
 
+
 ```{r}
-sjPlot::tab_model(allno_glmmodel_nb)#no offset
+#  Independence of Residuals and Random Effects
+#random effects of year
+#residuals leftover variation after accounting for fixed and random effects
+#random effects show between group variation (how each group's slope or intercet differs)
+#if are independent then model is correctly partiioning information
+#residuals capture individual level random noise not exxplained by model and if
+#there is no tie between residuals or random effects it upholds key assumption 
+#that the random effects and residuals are independent of each other
+re_year <- ranef(allno_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
+
+
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model with offset (Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
+qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
+
+
+
 ```
 
 
 
-
 ```{r}
-resid_pearson <- residuals(ethnicity_agegroupno_glmmodel_nb, type = "pearson")
-plot(resid_pearson ~ fitted(ethnicity_agegroupno_glmmodel_nb), main = "Pearson residuals vs Fitted")
-abline(h = 0, col = "red")
+install.packages("ggeffects")  # if not yet installed
+library(ggeffects)
+
+#  predictions by ethnicity
+pred_eth <- ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
+plot(pred_eth) + ggtitle("Predicted Maternal Deaths by Ethnicity")
+
+#  predictions by Age Group
+pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
+plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group")
+
+# Predictions by Dobbs Era
+pred_dobbs <- ggpredict(allno_glmmodel_nb, terms = "Dobbs_Era")
+plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era")
+
 ```
-
 ```{r}
-overdisp_fun <- function(ethnicity_agegroupno_glmmodel_nb) {
-  rdf <- df.residual(ethnicity_agegroupno_glmmodel_nb)
-  rp <- residuals(ethnicity_agegroupno_glmmodel_nb, type = "pearson")
-  Pearson.chisq <- sum(rp^2)
-  prat <- Pearson.chisq / rdf
-  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
-  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
-}
-
-overdisp_fun(ethnicity_agegroupno_glmmodel_nb)
-
-#ratio is around 1 which is good and not too indicative of overdispersion
-#pp-value is greater that P<0.005 so that means there is no significant overdispersion
-```
-
-```{r}
-
-arm::binnedplot(fitted(ethnicity_agegroupno_glmmodel_nb), 
-           residuals(ethnicity_agegroupno_glmmodel_nb, type = "response"), 
-           main = "Binned residual plot")
-# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
-```
-
-
-```{r}
-ranef(ethnicity_agegroupno_glmmodel_nb)$cond
+sjPlot::plot_model(allno_glmmodel_nb, type = "eff", terms = c("Ethnicity", "Age_Group", "Dobbs_Era"))
 ```
 
 
 
+```{r}
+ggplot(deaths_df3, aes(x = Year, y = Maternal_Mortality_Rate, color = Ethnicity)) +
+  geom_point() +
+  geom_line(aes(group = Ethnicity)) +
+  facet_wrap(~ Ethnicity) +
+  labs(title = "Maternal Deaths Over Time by Ethnicity")
+```
+
+```{r}
+ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Ethnicity)) +
+  geom_point() +
+  geom_line(aes(group = Ethnicity)) +
+  facet_wrap(~ Ethnicity) +
+  labs(title = "Maternal Deaths Over Time by Ethnicity Pre v. Post Dobs Era")
+```
+```{r}
+
+ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
+  geom_point() +
+  geom_line(aes(group = Age_Group)) +
+  facet_wrap(~ Age_Group) +
+  labs(title = "Maternal Deaths Over Time by Age Group")
+```
+```{r}
+ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Dobbs_Era)) +
+  geom_point() +
+  geom_line(aes(group = Dobbs_Era)) +
+  facet_wrap(~ Dobbs_Era) +
+  labs(title = "Maternal Deaths Over Time by Dobbs Era")
+```
+
+```{r}
+
+
+ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Age_Group)) +
+  geom_point() +
+  geom_line(aes(group = Age_Group)) +
+  facet_wrap(~ Age_Group) +
+  labs(title = "Maternal Deaths (Pre V Post Dobbs Era by Age Group")
+```
 
 
 ```{r}
-re <- ranef(ethnicity_agegroupno_glmmodel_nb)
-cond_re <- re$cond
-year_re <- as.data.frame(cond_re$Year)
-year_re$Year <- rownames(year_re)
 
-ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(title = "Random Effect Intercepts by Year",
-       x = "Year",
-       y = "Random Effect Estimate (Intercept)") +
+ggplot(deaths_df3, aes(x = Age_Group, y = Maternal_Deaths)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Maternal Deaths by Age Group")
+
+ggplot(deaths_df3, aes(x = Ethnicity, y = Maternal_Deaths)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Maternal Deaths by Ethnicity")
+
+ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Maternal Deaths by Dobbs_era")
+
+```
+
+
+```{r}
+library(ggeffects)
+ethnicity_effect <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
+
+plot(ethnicity_effect) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity (with offset)")
+
+ethnicity_effect2<-ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
+plot(ethnicity_effect2) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
+```
+```{r}
+library(ggeffects)
+ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
+
+plot(ethnicityage_effect) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
+
+ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
+plot(ethnicityage_effect2) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
+```
+```{r}
+
+##AS you can see plottting without offset leads to faulty plots
+library(ggeffects)
+ethnicityagedobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group", "Dobbs_Era"))
+
+plot(ethnicityagedobbs_effect) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
+
+ethnicityagedobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group", "Dobbs_Era"))
+plot(ethnicityagedobbs_effect2) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
+```
+```{r}
+##AS you can see plottting without offset leads to faulty plots
+library(ggeffects)
+ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobbs_Era"))
+
+plot(ethnicitydobbs_effect) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
+
+ethnicitydobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity",  "Dobbs_Era"))
+plot(ethnicitydobbs_effect2) +
+  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
+```
+
+```{r}
+library(ggplot2)
+
+# Predicted values for Year by Ethnicity
+year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
+
+# Plot
+plot(year_eth) +
+  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
+       x = "Year", y = "Predicted Maternal Deaths") +
+  theme_minimal()
+```
+```{r}
+
+#errror because reokkacenebt g=has 5591 values and data has 675
+library(ggplot2)
+
+# Add predicted values to your dataset
+deaths_df3$predicted <- predict(all_glmmodel_nb, type = "response")
+
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = predicted, color = Ethnicity)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  labs(title = "Trend of Predicted Maternal Deaths by Ethnicity Over Time",
+       x = "Year", y = "Predicted Maternal Deaths") +
   theme_minimal()
 
-
-#dashed zero is the overall random intercept
-# points above zero - years with above average random effect
-#points below zero- years below average random effect
 ```
-
-
-
-
 
 ```{r}
-sjPlot::tab_model(ethnicity_agegroupno_glmmodel_nb)
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Ethnicity)) +
+  stat_summary(fun = sum, geom = "line", size = 1) +
+  stat_summary(fun = sum, geom = "point") +
+  labs(title = "Observed Maternal Deaths Over Time by Ethnicity",
+       x = "Year", y = "Observed Maternal Deaths") +
+  theme_minimal()
+```
+```{r}
+library(ggplot2)
+
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  labs(
+    title = "Maternal Mortality Rate Over Time by Ethnicity",
+    x = "Year",
+    y = "Maternal Mortaity Rate (per 100,000 live births)"
+  ) +
+  theme_minimal()
+```
+```{r}
+library(ggplot2)
+
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  facet_wrap(~Dobbs_Era) +
+  labs(
+    title = "Maternal Mortality Rate Over Time by Ethnicity and Dobbs Era",
+    x = "Year",
+    y = "Maternal Mortaity Rate (per 100,000 live births)"
+  ) +
+  theme_minimal()
+
+#I tried to do age group but would not work
 ```
 
+```{r}
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Age_Group)) +
+  stat_summary(fun =mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  labs(title = "Maternal Mortality Rate Over Time by Age Group",
+       x = "Year", y = "Maternal Mortaity Rate (per 100,000 live births)") +
+  theme_minimal()
+```
 
+```{r}
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Dobbs_Era)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  labs(title = "Observed Maternal Deaths Over Time by Dobbs Era",
+       x = "Year", y = "Observed Maternal Deaths") +
+  theme_minimal()
+```
+```
 
 
 ### Modeling and Results
@@ -971,7 +1074,7 @@ sjPlot::tab_model(ethnicity_agegroupno_glmmodel_nb)
 ### Conclusion
 
 -   Summarize your key findings.
-
+WE did not find what we expected but the data is provisional. 
 -   Discuss the implications of your results.
 
 ## References

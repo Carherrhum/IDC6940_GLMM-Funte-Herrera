@@ -848,23 +848,7 @@ qqline(re_year, col = "red")##dots follow reference line that shows where points
 
 
 
-```{r}
-install.packages("ggeffects")  # if not yet installed
-library(ggeffects)
 
-#  predictions by ethnicity
-pred_eth <- ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth) + ggtitle("Predicted Maternal Deaths by Ethnicity")
-
-#  predictions by Age Group
-pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
-plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group")
-
-# Predictions by Dobbs Era
-pred_dobbs <- ggpredict(allno_glmmodel_nb, terms = "Dobbs_Era")
-plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era")
-
-```
 
 
 

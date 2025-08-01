@@ -879,12 +879,7 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Mortality_Rate, color = Ethnicity)
   labs(title = "Maternal Deaths Over Time by Ethnicity")
 ```
 
-```{r}
-ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Ethnicity)) +
-  geom_point() +
-  geom_line(aes(group = Ethnicity)) +
-  labs(title = "Maternal Deaths Over Time by Ethnicity Pre v. Post Dobs Era")
-```
+
 
 
 

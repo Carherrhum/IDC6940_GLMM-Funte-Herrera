@@ -442,11 +442,18 @@ poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era
 poissonmodel_glmm_all
 ```
 
+
+
 ```{r}
 check_overdispersion(poissonmodel_glmm_all)
 
 ```
 ##overdispersion still detected
+
+```{r}
+install.packages("gglmmTMB")
+```
+
 
 ```{r}
 
@@ -758,6 +765,7 @@ sjPlot::plot_model(ethnicity_agegroup_glmmodel_nb, type = "re") #no extreme poin
 sjPlot::tab_model(ethnicity_agegroup_glmmodel_nb)
 
 ```
+
 
 
 

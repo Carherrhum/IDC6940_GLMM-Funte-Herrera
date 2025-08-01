@@ -267,7 +267,7 @@ df_ethnicity <- deaths_df %>%
     filter(!is.na(Ethnicity)) %>%
     group_by(Ethnicity) %>%
     summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
-barplot(df_ethnicity$Maternal_Deaths,names.arg=c('Am In/Ala', 'Asian, NH','Black, NH','Hispanic','White,NH'),main="Maternal Mortality Totals 2019-2024 by Ethnicity",col=colors,xlab='Ethnicity',ylab='Maternal Deaths')
+#barplot(df_ethnicity$Maternal_Deaths,names.arg=c('Am In/Ala', 'Asian, NH','Black, #NH','Hispanic','White,NH'),main="Maternal Mortality Totals 2019-2024 by #Ethnicity",col=colors,xlab='Ethnicity',ylab='Maternal Deaths')
 ```
 This graph shows the total Maternal Deaths for each year. The counts for year are the sum of the monthly data.
 ```{r}
@@ -985,19 +985,22 @@ plot(ethnicitydobbs_effect2) +
 library(ggplot2)
 
 # Predicted values for Year by Ethnicity
-year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
+#year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
 
 # Plot
-plot(year_eth) +
-  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
-       x = "Year", y = "Predicted Maternal Deaths") +
-  theme_minimal()
+#3333plot(year_eth) +
+  #labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
+   #    x = "Year", y = "Predicted Maternal Deaths") +
+  
+
+#theme_minimal()
 ```
 
 ```{r}
 
 #errror because reokkacenebt g=has 5591 values and data has 675
 library(ggplot2)
+library(ggeffects)
 
 # Add predicted values to your dataset
 deaths_df3$predicted <- predict(all_glmmodel_nb, type = "response")
@@ -1022,6 +1025,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, 
 
 ```{r}
 library(ggplot2)
+library(ggeffects)
 
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
   stat_summary(fun = mean, geom = "line", size = 1) +
@@ -1036,7 +1040,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
 
 ```{r}
 library(ggplot2)
-
+library(ggeffects)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
   stat_summary(fun = mean, geom = "line", size = 1) +
   stat_summary(fun = mean, geom = "point") +
@@ -1052,6 +1056,8 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
 ```
 
 ```{r}
+library(ggplot2)
+library(ggeffects)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Age_Group)) +
   stat_summary(fun =mean, geom = "line", size = 1) +
   stat_summary(fun = mean, geom = "point") +
@@ -1061,6 +1067,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
 ```
 
 ```{r}
+library(ggplot2)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Dobbs_Era)) +
   stat_summary(fun = mean, geom = "line", size = 1) +
   stat_summary(fun = mean, geom = "point") +
@@ -1068,7 +1075,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
        x = "Year", y = "Observed Maternal Deaths") +
   theme_minimal()
 ```
-```
+
 
 
 ### Modeling and Results

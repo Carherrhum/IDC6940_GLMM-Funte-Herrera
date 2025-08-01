@@ -445,11 +445,18 @@ poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era
 poissonmodel_glmm_all
 ```
 
+
+
 ```{r}
 check_overdispersion(poissonmodel_glmm_all)
 
 ```
 ##overdispersion still detected
+
+```{r}
+install.packages("gglmmTMB")
+```
+
 
 ```{r}
 
@@ -474,36 +481,6 @@ ethnicity_agegroup_glmmodel_nb <- glmmTMB(
 summary(ethnicity_agegroup_glmmodel_nb)
 ```
 
-```{r}
-ethnicity_year_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + Dobbs_Era +  (1 |Year),
-  offset=log(Live_Births),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(ethnicity_year_glmmodel_nb)
-
-```
-
-```{r}
-ethnicity_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity  +  (1 |Year),
-  offset=log(Live_Births),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(ethnicity_glmmodel_nb)
-```
-
-```{r}
-year_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Dobbs_Era +  (1 |Year),
-  offset=log(Live_Births),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(year_glmmodel_nb)
-```
 
 ```{r}
 
@@ -526,32 +503,6 @@ ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
 summary(ethnicity_agegroupno_glmmodel_nb)
 ```
 
-```{r}
-ethnicity_yearno_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + Dobbs_Era +  (1 |Year),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(ethnicity_yearno_glmmodel_nb)
-```
-
-```{r}
-ethnicityno_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity  +  (1 |Year),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(ethnicityno_glmmodel_nb)
-```
-
-```{r}
-yearno_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Dobbs_Era +  (1 |Year),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(yearno_glmmodel_nb)
-```
 
 
 
@@ -570,38 +521,41 @@ library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
 
 
 
-```{r}
-performance::check_model(all_glmmodel_nb)#interesting
-performance::check_model(ethnicity_agegroup_glmmodel_nb)#interesting
-performance::check_model(ethnicity_year_glmmodel_nb)#no
-performance::check_model(ethnicity_glmmodel_nb)#no
-performance::check_model(year_glmmodel_nb)##no
-performance::check_model(allno_glmmodel_nb)##interesting
-performance::check_model(ethnicity_agegroupno_glmmodel_nb)#interesting
-performance::check_model(ethnicity_yearno_glmmodel_nb)#no
-performance::check_model(ethnicityno_glmmodel_nb)# no
-performance::check_model(yearno_glmmodel_nb)#no
 
-#performance::check_model(all2_glmmodel_nb)#interesting
-#performance::check_model(eage_glmmodel_nb)
-#performance::check_model(allno2glmmmodel)#interesting
+
+```{r}
+performance::check_model(all_glmmodel_nb, verbose = TRUE,residual_type = "normal")#interesting
+performance::r2(all_glmmodel_nb)
+check_singularity(all_glmmodel_nb)#random effect is not a singularity
+check_collinearity(all_glmmodel_nb)
 
 ```
 
 ```{r}
-performance::r2(all_glmmodel_nb)
-check_singularity(all_glmmodel_nb)
-
+performance::check_model(ethnicity_agegroup_glmmodel_nb, verbose=TRUE, residual_type = "normal")#interesting
 performance::r2(ethnicity_agegroup_glmmodel_nb)
 check_singularity(ethnicity_agegroup_glmmodel_nb)
+check_collinearity(ethnicity_agegroup_glmmodel_nb)
+```
 
+```{r}
+performance::check_model(allno_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
 performance::r2(allno_glmmodel_nb)
 check_singularity(allno_glmmodel_nb)
+check_collinearity(allno_glmmodel_nb)
+```
 
+
+
+```{r}
+performance::check_model(ethnicity_agegroupno_glmmodel_nb, verbose=TRUE, residual_type = "normal")#interesting
 performance::r2(ethnicity_agegroupno_glmmodel_nb)
 check_singularity(ethnicity_agegroupno_glmmodel_nb)
-
+check_collinearity(ethnicity_agegroupno_glmmodel_nb)
 ```
+
+
+
 
 
 ```{r}
@@ -663,10 +617,7 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 ```
 
 
-```{r}
-performance::check_collinearity(all_glmmodel_nb)
-performance::check_model(all_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-```
+
 
 
 ```{r}
@@ -738,10 +689,7 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 ```
 
 
-```{r}
-performance::check_collinearity(ethnicity_agegroup_glmmodel_nb)
-performance::check_model(ethnicity_agegroup_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-```
+
 
 
 ```{r}
@@ -754,6 +702,7 @@ sjPlot::plot_model(ethnicity_agegroup_glmmodel_nb, type = "re") #no extreme poin
 sjPlot::tab_model(ethnicity_agegroup_glmmodel_nb)
 
 ```
+
 
 
 
@@ -816,12 +765,6 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
-
-```{r}
-performance::check_collinearity(allno_glmmodel_nb)
-
-performance::check_model(allno_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-```
 
 
 
@@ -894,13 +837,7 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 ```
 
 
-```{r}
-performance::check_collinearity(ethnicity_agegroupno_glmmodel_nb)
 
-performance::check_model(ethnicity_agegroupno_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-
-
-```
 
 
 ```{r}

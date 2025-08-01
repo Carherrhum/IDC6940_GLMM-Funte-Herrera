@@ -617,10 +617,7 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 ```
 
 
-```{r}
-performance::check_collinearity(all_glmmodel_nb)
-performance::check_model(all_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-```
+
 
 
 ```{r}
@@ -696,10 +693,7 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 ```
 
 
-```{r}
-performance::check_collinearity(ethnicity_agegroup_glmmodel_nb)
-performance::check_model(ethnicity_agegroup_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-```
+
 
 
 ```{r}
@@ -778,12 +772,6 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
-
-```{r}
-performance::check_collinearity(allno_glmmodel_nb)
-
-performance::check_model(allno_glmmodel_nb, verbose = TRUE, residual_type = "normal")
-```
 
 
 

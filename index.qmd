@@ -970,6 +970,7 @@ plot(ethnicityagedobbs_effect2) +
 
 ```{r}
 ##AS you can see plottting without offset leads to faulty plots
+library(ggplot2)
 library(ggeffects)
 ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobbs_Era"))
 
@@ -1002,6 +1003,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = predicted, color 
 ```
 
 ```{r}
+library(ggplot2)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Ethnicity)) +
   stat_summary(fun = sum, geom = "line", size = 1) +
   stat_summary(fun = sum, geom = "point") +

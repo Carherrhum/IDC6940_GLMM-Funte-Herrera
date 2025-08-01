@@ -872,12 +872,7 @@ sjPlot::plot_model(allno_glmmodel_nb, type = "eff", terms = c("Ethnicity", "Age_
 
 
 
-```{r}
-ggplot(deaths_df3, aes(x = Year, y = Maternal_Mortality_Rate, color = Ethnicity)) +
-  geom_point() +
-  geom_line(aes(group = Ethnicity)) +
-  labs(title = "Maternal Deaths Over Time by Ethnicity")
-```
+
 
 
 

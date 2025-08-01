@@ -538,7 +538,7 @@ bbmle::AICtab(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb,
 
 ```{r}
 
-library(MuMIn)
+
 MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
 
 ```

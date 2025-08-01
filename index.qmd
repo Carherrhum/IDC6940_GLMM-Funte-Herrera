@@ -933,29 +933,7 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 ```
 
 
-```{r}
-library(ggeffects)
-ethnicity_effect <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
 
-plot(ethnicity_effect) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity (with offset)")
-
-ethnicity_effect2<-ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
-plot(ethnicity_effect2) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
-```
-
-```{r}
-library(ggeffects)
-ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
-
-plot(ethnicityage_effect) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
-
-ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
-plot(ethnicityage_effect2) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
-```
 
 
 

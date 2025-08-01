@@ -957,19 +957,7 @@ plot(ethnicityage_effect2) +
   ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
 ```
 
-```{r}
 
-##AS you can see plottting without offset leads to faulty plots
-library(ggeffects)
-ethnicityagedobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group", "Dobbs_Era"))
-
-plot(ethnicityagedobbs_effect) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
-
-ethnicityagedobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group", "Dobbs_Era"))
-plot(ethnicityagedobbs_effect2) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
-```
 
 
 

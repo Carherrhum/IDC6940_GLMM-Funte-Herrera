@@ -876,7 +876,6 @@ sjPlot::plot_model(allno_glmmodel_nb, type = "eff", terms = c("Ethnicity", "Age_
 ggplot(deaths_df3, aes(x = Year, y = Maternal_Mortality_Rate, color = Ethnicity)) +
   geom_point() +
   geom_line(aes(group = Ethnicity)) +
-  facet_wrap(~ Ethnicity) +
   labs(title = "Maternal Deaths Over Time by Ethnicity")
 ```
 
@@ -884,7 +883,6 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Mortality_Rate, color = Ethnicity)
 ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Ethnicity)) +
   geom_point() +
   geom_line(aes(group = Ethnicity)) +
-  facet_wrap(~ Ethnicity) +
   labs(title = "Maternal Deaths Over Time by Ethnicity Pre v. Post Dobs Era")
 ```
 
@@ -954,9 +952,8 @@ library(ggeffects)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
   stat_summary(fun = mean, geom = "line", size = 1) +
   stat_summary(fun = mean, geom = "point") +
-  facet_wrap(~Dobbs_Era) +
   labs(
-    title = "Maternal Mortality Rate Over Time by Ethnicity and Dobbs Era",
+    title = "Maternal Mortality Rate Over Time by Ethnicity",
     x = "Year",
     y = "Maternal Mortaity Rate (per 100,000 live births)"
   ) +

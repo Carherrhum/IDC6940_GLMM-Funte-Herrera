@@ -451,6 +451,13 @@ check_overdispersion(poissonmodel_glmm_all)
 ##overdispersion still detected
 
 ```{r}
+
+var(deaths_df3$Maternal_Deaths)##variance is indeed greater than mean so Negative Binomial moel would be appropriate
+mean(deaths_df3$Maternal_Deaths)
+```
+
+
+```{r}
 install.packages("gglmmTMB")
 ```
 
@@ -513,7 +520,30 @@ library(DHARMa)
 
 if (!require("sjPlot"))install.packages("sjPlot")#if required to install
 library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
+if (!require("MuMIN"))install.packages("MuMIn")
+library(MuMIn)
+if (!require("bbmle"))install.packages("bbmle")
+library("bbmle")
 ```
+
+
+
+
+
+```{r}
+bbmle::AICtab(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
+
+
+```
+
+```{r}
+
+library(MuMIn)
+MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
+
+```
+
+
 
 
 
@@ -774,8 +804,87 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 
 
 
+```{r}
+
+#The response variable and the predictors have a linear relationship within the levels of random effect
+# Base partial residuals (approximate)
+
+resid_vals<-resid(allno_glmmodel_nb,type = "pearson")
+fitted_vals <- predict(allno_glmmodel_nb,type = "response")
+
+x <- jitter(fitted_vals)
+y<-resid_vals
+
+plot(x, y, main = "Residuals vs Fitted with LOESS") #LOESS is smoother line
+abline(h = 0, col = "red")#where residuals equal zero
+lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
 
 
+```
+
+```{r}
+#Checking independence between residuals and random effects
+#year residual mean centered around 0 with no clear pattern or group #Assumption is upheld
+resid_vals <- residuals(allno_glmmodel_nb, type = "pearson")
+
+
+library(ggplot2)
+
+
+#residuals centered around zero- central tendency
+ggplot(deaths_df3, aes(x = as.factor(Year), y = resid_vals)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals by Year", y = "Residuals", x = "Year")
+#points are scattered with no discernible pattern
+
+```
+
+
+
+```{r}
+#Normality of Random effects
+
+#Points fall close to red line so random effects are approximately normal
+
+
+re_year <- ranef(allno_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
+
+qqnorm(re_year, main = "Q-Q Plot of Random Effect (Year)")
+qqline(re_year, col = "red")#points should roughly lie by this line if normal
+hist(re_year, main = "Histogram of Random Effects", xlab = "Random effect (Year)")
+
+df_re <- data.frame(re = re_year)
+
+ggplot(df_re, aes(x = re_year)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
+  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
+                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
+  ggtitle("Density of Random Effect (Year) with Normal Curve")
+
+#since most of blue density is within red line 
+#The random effect of year is approximately normal with some mild deviations which is common with count models 
+```
+
+```{r}
+#  Independence of Residuals and Random Effects
+#random effects of year
+#residuals leftover variation after accounting for fixed and random effects
+#random effects show between group variation (how each group's slope or intercet differs)
+#if are independent then model is correctly partiioning information
+#residuals capture individual level random noise not exxplained by model and if
+#there is no tie between residuals or random effects it upholds key assumption 
+#that the random effects and residuals are independent of each other
+re_year <- ranef(allno_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
+
+
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts (Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
+qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
+
+
+
+```
 
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb)#no offset
@@ -855,11 +964,6 @@ sjPlot::tab_model(ethnicity_agegroupno_glmmodel_nb)
 ```
 
 
-
-
-```{r}
-##Comare AIC and see who has influential points and then we find best model
-```
 
 
 ### Modeling and Results

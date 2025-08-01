@@ -701,6 +701,7 @@ sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random 
 sjPlot::tab_model(all_glmmodel_nb)#withh offset
 
 ```
+
 ```{r}
 # pseudo overdispersion test
 overdisp_fun <- function(model) {
@@ -733,6 +734,7 @@ lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
 
 
 ```
+
 ```{r}
 
 
@@ -777,6 +779,7 @@ ggplot(df_re, aes(x = re_year)) +
 #since most of blue density is within red line 
 #The random effect of year is approximately normal with some mild deviations which is common with count models 
 ```
+
 ```{r}
 #Normality of Random effects
 
@@ -859,6 +862,7 @@ pred_dobbs <- ggpredict(allno_glmmodel_nb, terms = "Dobbs_Era")
 plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era")
 
 ```
+
 ```{r}
 sjPlot::plot_model(allno_glmmodel_nb, type = "eff", terms = c("Ethnicity", "Age_Group", "Dobbs_Era"))
 ```
@@ -880,6 +884,7 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Ethnicity)) +
   facet_wrap(~ Ethnicity) +
   labs(title = "Maternal Deaths Over Time by Ethnicity Pre v. Post Dobs Era")
 ```
+
 ```{r}
 
 ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
@@ -888,6 +893,7 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
   facet_wrap(~ Age_Group) +
   labs(title = "Maternal Deaths Over Time by Age Group")
 ```
+
 ```{r}
 ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Dobbs_Era)) +
   geom_point() +
@@ -935,6 +941,7 @@ ethnicity_effect2<-ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
 plot(ethnicity_effect2) +
   ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
 ```
+
 ```{r}
 library(ggeffects)
 ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
@@ -946,6 +953,7 @@ ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_G
 plot(ethnicityage_effect2) +
   ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
 ```
+
 ```{r}
 
 ##AS you can see plottting without offset leads to faulty plots
@@ -959,6 +967,7 @@ ethnicityagedobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "
 plot(ethnicityagedobbs_effect2) +
   ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
 ```
+
 ```{r}
 ##AS you can see plottting without offset leads to faulty plots
 library(ggeffects)
@@ -984,6 +993,7 @@ plot(year_eth) +
        x = "Year", y = "Predicted Maternal Deaths") +
   theme_minimal()
 ```
+
 ```{r}
 
 #errror because reokkacenebt g=has 5591 values and data has 675
@@ -1009,6 +1019,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, 
        x = "Year", y = "Observed Maternal Deaths") +
   theme_minimal()
 ```
+
 ```{r}
 library(ggplot2)
 
@@ -1022,6 +1033,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
   ) +
   theme_minimal()
 ```
+
 ```{r}
 library(ggplot2)
 

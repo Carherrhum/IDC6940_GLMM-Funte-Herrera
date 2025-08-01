@@ -866,9 +866,7 @@ plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era")
 
 ```
 
-```{r}
-sjPlot::plot_model(allno_glmmodel_nb, type = "eff", terms = c("Ethnicity", "Age_Group", "Dobbs_Era"))
-```
+
 
 
 

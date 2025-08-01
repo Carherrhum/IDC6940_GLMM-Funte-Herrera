@@ -168,9 +168,9 @@ df <- read.csv("data/VSRR_Provisional_Maternal_Death_Counts_and_Rates_20250726.c
 #renaming columns
 df<-df%>% 
   rename(Year= Year.of.Death, Month= Month.of.Death, Maternal_Deaths= Maternal.Deaths, Live_Births= Live.Births, Maternal_Mortality_Rate= Maternal.Mortality.Rate, Time_Period= Time.Period, Month_Ending_Date= Month.Ending.Date, Data_As_Of= Data.As.Of) 
-  
+str(df) 
 filtered_df<- df%>% filter(Maternal_Deaths > 0, Live_Births > 100) #Filtering out rare combinations
-  
+
 test_df <- na.omit(filtered_df)#filtered na
 
 ```

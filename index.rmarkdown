@@ -18,6 +18,7 @@ editor:
     wrap: 72
 ---
 
+
 Slides: [slides.html](slides.html){target="_blank"} ( Go to `slides.qmd`
 to edit)
 
@@ -134,6 +135,7 @@ The data we used come from the National Vital Statistics System, an organization
 
 -   Highlight unexpected patterns or anomalies.
 
+
 ```{r, warning=FALSE, echo=T, message=FALSE}
 # loading packages 
 library(tidyverse)
@@ -155,7 +157,6 @@ library(performance)
 if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
 library(glmmTMB)
 ```
-
 
 ```{r, warning=FALSE, echo=TRUE}
 
@@ -260,8 +261,6 @@ df_total_year
 ```{r}
 plot_missing(deaths_df)
 ```
-
-
 
 ```{r}
 #Data Exploration Graphs
@@ -430,10 +429,12 @@ total_df %>% summarize(mean(Maternal_Deaths),
 var(Maternal_Deaths))
 ```
 
+
 <<<<<<< HEAD
 =======
 
 >>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
+
 ```{r}
 poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
                               offset=log(Live_Births),
@@ -442,18 +443,17 @@ poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era
 poissonmodel_glmm_all
 ```
 
-
-
 ```{r}
 check_overdispersion(poissonmodel_glmm_all)
 
 ```
+
 ##overdispersion still detected
+
 
 ```{r}
 install.packages("gglmmTMB")
 ```
-
 
 ```{r}
 
@@ -478,7 +478,6 @@ ethnicity_agegroup_glmmodel_nb <- glmmTMB(
 summary(ethnicity_agegroup_glmmodel_nb)
 ```
 
-
 ```{r}
 
 ##with no offset # all fixed effects
@@ -500,9 +499,6 @@ ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
 summary(ethnicity_agegroupno_glmmodel_nb)
 ```
 
-
-
-
 ```{r setup, include=FALSE}
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 if (!require("performance"))install.packages("performance")#if required to install
@@ -514,11 +510,6 @@ library(DHARMa)
 if (!require("sjPlot"))install.packages("sjPlot")#if required to install
 library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
 ```
-
-
-
-
-
 
 ```{r}
 performance::check_model(all_glmmodel_nb, verbose = TRUE,residual_type = "normal")#interesting
@@ -542,18 +533,12 @@ check_singularity(allno_glmmodel_nb)
 check_collinearity(allno_glmmodel_nb)
 ```
 
-
-
 ```{r}
 performance::check_model(ethnicity_agegroupno_glmmodel_nb, verbose=TRUE, residual_type = "normal")#interesting
 performance::r2(ethnicity_agegroupno_glmmodel_nb)
 check_singularity(ethnicity_agegroupno_glmmodel_nb)
 check_collinearity(ethnicity_agegroupno_glmmodel_nb)
 ```
-
-
-
-
 
 ```{r}
 resid_pearson <- residuals(all_glmmodel_nb, type = "pearson")
@@ -589,10 +574,6 @@ arm::binnedplot(fitted(all_glmmodel_nb),
 ranef(all_glmmodel_nb)$cond
 ```
 
-
-
-
-
 ```{r}
 library(ggplot2)
 
@@ -616,12 +597,10 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
-
 ```{r}
 performance::check_collinearity(all_glmmodel_nb)
 performance::check_model(all_glmmodel_nb, verbose = TRUE, residual_type = "normal")
 ```
-
 
 ```{r}
 sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random effects
@@ -631,7 +610,6 @@ sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random 
 sjPlot::tab_model(all_glmmodel_nb)
 
 ```
-
 
 ```{r}
 resid_pearson <- residuals(ethnicity_agegroup_glmmodel_nb, type = "pearson")
@@ -663,14 +641,9 @@ arm::binnedplot(fitted(ethnicity_agegroup_glmmodel_nb),
 # fan shape  heteroskedasticity (non-constant variance)- coon when with count data
 ```
 
-
 ```{r}
 ranef(ethnicity_agegroup_glmmodel_nb)$cond
 ```
-
-
-
-
 
 ```{r}
 library(ggplot2)
@@ -695,12 +668,10 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
-
 ```{r}
 performance::check_collinearity(ethnicity_agegroup_glmmodel_nb)
 performance::check_model(ethnicity_agegroup_glmmodel_nb, verbose = TRUE, residual_type = "normal")
 ```
-
 
 ```{r}
 sjPlot::plot_model(ethnicity_agegroup_glmmodel_nb, type = "re") #no extreme points with random effects
@@ -712,9 +683,6 @@ sjPlot::plot_model(ethnicity_agegroup_glmmodel_nb, type = "re") #no extreme poin
 sjPlot::tab_model(ethnicity_agegroup_glmmodel_nb)
 
 ```
-
-
-
 
 ```{r}
 resid_pearson <- residuals(allno_glmmodel_nb, type = "pearson")
@@ -746,14 +714,9 @@ arm::binnedplot(fitted(allno_glmmodel_nb),
 # fan shape  heteroskedasticity (non-constant variance)- coon when with count data
 ```
 
-
 ```{r}
 ranef(allno_glmmodel_nb)$cond
 ```
-
-
-
-
 
 ```{r}
 library(ggplot2)
@@ -778,23 +741,15 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
-
 ```{r}
 performance::check_collinearity(allno_glmmodel_nb)
 
 performance::check_model(allno_glmmodel_nb, verbose = TRUE, residual_type = "normal")
 ```
 
-
-
-
-
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb)#no offset
 ```
-
-
-
 
 ```{r}
 resid_pearson <- residuals(ethnicity_agegroupno_glmmodel_nb, type = "pearson")
@@ -826,14 +781,9 @@ arm::binnedplot(fitted(ethnicity_agegroupno_glmmodel_nb),
 # fan shape  heteroskedasticity (non-constant variance)- coon when with count data
 ```
 
-
 ```{r}
 ranef(ethnicity_agegroupno_glmmodel_nb)$cond
 ```
-
-
-
-
 
 ```{r}
 library(ggplot2)
@@ -858,7 +808,6 @@ ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
 #points below zero- years below average random effect
 ```
 
-
 ```{r}
 performance::check_collinearity(ethnicity_agegroupno_glmmodel_nb)
 
@@ -867,17 +816,14 @@ performance::check_model(ethnicity_agegroupno_glmmodel_nb, verbose = TRUE, resid
 
 ```
 
-
 ```{r}
 sjPlot::tab_model(ethnicity_agegroupno_glmmodel_nb)
 ```
 
-
-
-
 ```{r}
 ##Comare AIC and see who has influential points and then we find best model
 ```
+
 
 
 ### Modeling and Results
@@ -899,3 +845,4 @@ sjPlot::tab_model(ethnicity_agegroupno_glmmodel_nb)
 -   Discuss the implications of your results.
 
 ## References
+

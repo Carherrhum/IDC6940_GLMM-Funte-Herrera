@@ -154,6 +154,9 @@ library(performance)
 ##Overdispersion is detected with Poisson model thus we must use negative binomial model
 if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
 library(glmmTMB)
+
+if (!require("ggeffects"))install.packages("ggeffects")
+library(ggeffects)
 ```
 
 

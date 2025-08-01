@@ -916,21 +916,7 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Age_Group)) +
 ```
 
 
-```{r}
 
-ggplot(deaths_df3, aes(x = Age_Group, y = Maternal_Deaths)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Maternal Deaths by Age Group")
-
-ggplot(deaths_df3, aes(x = Ethnicity, y = Maternal_Deaths)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Maternal Deaths by Ethnicity")
-
-ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Maternal Deaths by Dobbs_era")
-
-```
 
 
 

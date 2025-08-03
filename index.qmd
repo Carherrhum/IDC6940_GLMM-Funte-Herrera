@@ -572,9 +572,10 @@ MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_
 
 
 
-
+###checking performance, R2 and singlulairty of effect variable and collinearity of model without offset
 
 ```{r}
+#checking performance, R2 and singlulairty of effect variable and colliarnity of model without offset
 performance::check_model(allno_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
 performance::r2(allno_glmmodel_nb)
 check_singularity(allno_glmmodel_nb)
@@ -582,7 +583,7 @@ check_collinearity(allno_glmmodel_nb)
 ```
 
 
-
+###checking performance, R2 and singlulairty of effect variable and collinearity of model with offset
 `
 ```{r}
 performance::check_model(all_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
@@ -590,22 +591,84 @@ performance::r2(all_glmmodel_nb)
 check_singularity(all_glmmodel_nb)
 check_collinearity(all_glmmodel_nb)
 ```
+###The assumption graphs are the same for both models with and without offset. I included only those with offset cof conciseness. These are assumptions that need to be met for model to be acceptable.
 
-
-
-
-
-
-
+##According to this graph The response variable and the predictors have a linear relationship within the levels of random effect
 
 ```{r}
 
-resid_pearson <- residuals(all_glmmodel_nb, type = "pearson")
-plot(resid_pearson ~ fitted(all_glmmodel_nb), main = "Pearson residuals vs Fitted for model with offset")
-abline(h = 0, col = "red")
+
+#The response variable and the predictors have a linear relationship within the levels of random effect
+# Base partial residuals (approximate)
+
+resid_vals<-resid(all_glmmodel_nb,type = "pearson")
+fitted_vals <- predict(all_glmmodel_nb,type = "response")
+
+x <- jitter(fitted_vals)
+y<-resid_vals
+
+plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
+abline(h = 0, col = "red")#where residuals equal zero
+lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
+
+
+```
+
+###According to this graph there is Normality of random effect because points fall close to red line of Q-Q plot. The histogram falls a somewhat nromal distribution. And the blue density of the random effect distribution lies mostly within the red dashed line of the distribution of ideal normal distribution with same means. The approximmately normal blue density of random effect year could be expected to have mild deviations since we are workking with count data
+
+```{r}
+#Normality of Random effects
+
+#Points fall close to red line so random effects are approximately normal
+
+
+re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
+
+qqnorm(re_year, main = "Q-Q Plot of Random Effect of (Year)")
+qqline(re_year, col = "red")#points should roughly lie by this line if normal
+hist(re_year, main = "Histogram of Random Effects of model ", xlab = "Random effect (Year)")
+
+df_re <- data.frame(re = re_year)
+
+ggplot(df_re, aes(x = re_year)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
+  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
+                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
+  ggtitle("Density of Random Effect (Year) model  with Normal Curve")
+
+#since most of blue density is within red line 
+#The random effect of year is approximately normal with some mild deviations which is common with count models 
+```
+
+### The Independence of residual and Random Effects assummption is met because the dots of the residuals of the random effect (year) falls on the red refence line of  quantiles of random interceppt estimates vesus quantiles of normal distribution. Additionally a blue Loess lines is approximately close to this red reference lines which would also indicate independene of residuals and random effects.
+```{r}
+#  Independence of Residuals and Random Effects
+#random effects of year
+#residuals leftover variation after accounting for fixed and random effects
+#random effects show between group variation (how each group's slope or intercet differs)
+#if are independent then model is correctly partiioning information
+#residuals capture individual level random noise not exxplained by model and if
+#there is no tie between residuals or random effects it upholds key assumption 
+#that the random effects and residuals are independent of each other
+re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
+
+
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
+qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
+
+
+
 ```
 
 
+
+
+
+
+
+
+
+###This tests if model is overdisersed since the ratio given is around ,0.051 it is not indicative of overdisppersion and neither is the p value which is much grater that (p <0.05) which also indicates there is no significant overdispersion with this model.
 
 
 ```{r}
@@ -627,134 +690,27 @@ overdisp_fun(all_glmmodel_nb)
 
 
 
-```{r}
-arm::binnedplot(fitted(all_glmmodel_nb), 
-           residuals(all_glmmodel_nb, type = "response"), 
-           main = "Binned residual plot in model with offset")
-# fan shape  heteroskedasticity (non-constant variance)- coon when with count data
-```
 
 
-
-```{r}
-re <- ranef(all_glmmodel_nb)
-cond_re <- re$cond
-year_re <- as.data.frame(cond_re$Year)
-year_re$Year <- rownames(year_re)
-
-ggplot(year_re, aes(x = factor(Year), y = `(Intercept)`)) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(title = "Random Effect Intercepts by Year in model with offset",
-       x = "Year",
-       y = "Random Effect Estimate (Intercept)") +
-  theme_minimal()
-
-
-#dashed zero is the overall random intercept
-# points above zero - years with above average random effect
-#points below zero- years below average random effect
-```
-
-
-
+####The coefficients of not using an offset has affected the estimates in a poor manner
 
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb)##coefficients of not using offset is not good and can effect estimates
 
 ```
 
-```{r}
-sjPlot::plot_model(all_glmmodel_nb, type = "re") #no extreme points with random effects #with offset it is same as without offset
-```
+
 
 ```{r}
 sjPlot::tab_model(all_glmmodel_nb)#withh offset
 
 ```
 
-```{r}
-# pseudo overdispersion test
-overdisp_fun <- function(model) {
-  rdf <- df.residual(model)
-  rp <- residuals(model, type = "pearson")
-  Pearson.chisq <- sum(rp^2)
-  prat <- Pearson.chisq / rdf
-  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
-  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
-}
-overdisp_fun(all_glmmodel_nb )
-overdisp_fun(allno_glmmodel_nb)#slightly worse
-```
-
-###The assumption graphs are the sae for both models with and without offset. I included only those with offset cof conciseness
-
-
-```{r}
-
-
-#The response variable and the predictors have a linear relationship within the levels of random effect
-# Base partial residuals (approximate)
-
-resid_vals<-resid(all_glmmodel_nb,type = "pearson")
-fitted_vals <- predict(all_glmmodel_nb,type = "response")
-
-x <- jitter(fitted_vals)
-y<-resid_vals
-
-plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
-abline(h = 0, col = "red")#where residuals equal zero
-lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
-
-
-```
-
-`
-
-```{r}
-#Normality of Random effects
-
-#Points fall close to red line so random effects are approximately normal
-
-
-re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
-
-qqnorm(re_year, main = "Q-Q Plot of Random Effect of model without offset (Year)")
-qqline(re_year, col = "red")#points should roughly lie by this line if normal
-hist(re_year, main = "Histogram of Random Effectsof model without offset", xlab = "Random effect (Year)")
-
-df_re <- data.frame(re = re_year)
-
-ggplot(df_re, aes(x = re_year)) +
-  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
-  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
-                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
-  ggtitle("Density of Random Effect (Year) model  with Normal Curve")
-
-#since most of blue density is within red line 
-#The random effect of year is approximately normal with some mild deviations which is common with count models 
-```
-
-```{r}
-#  Independence of Residuals and Random Effects
-#random effects of year
-#residuals leftover variation after accounting for fixed and random effects
-#random effects show between group variation (how each group's slope or intercet differs)
-#if are independent then model is correctly partiioning information
-#residuals capture individual level random noise not exxplained by model and if
-#there is no tie between residuals or random effects it upholds key assumption 
-#that the random effects and residuals are independent of each other
-re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
-
-
-qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
-qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
 
 
 
-```
 
-
+###These are ppredictions of maternal deaths utilizing the models of with and without offset by each individual fixed effect (Ethnicity, Age Group, Dobbs Era) as you can see there are vast differences between the plots with offset and without offfset
 
 
 ```{r}
@@ -785,19 +741,22 @@ plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era (with offset"
 
 ```
 
+###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and age group
 ```{r}
 library(ggeffects)
 ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
 
 plot(ethnicityage_effect) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
+  ggtitle("Predicted Maternal Deaths by Ethnicity and age group (with offset)")
 
 ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
 plot(ethnicityage_effect2) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
+  ggtitle("Predicted Maternal Deaths by Ethnicity and age group (without offset)")
 
 
 ```
+
+###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Dobbs Era
 
 ```{r}
 #AS you can see plottting without offset leads to faulty plots--no way to over look?
@@ -806,24 +765,15 @@ ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobb
 
 
 plot(ethnicitydobbs_effect) +
- ggtitle("Predicted Maternal Deaths by Ethnicity ange age group (with offset)")
+ ggtitle("Predicted Maternal Deaths by Ethnicity and Dobbs Era (with offset)")
 
 ethnicitydobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity",  "Dobbs_Era"))
 plot(ethnicitydobbs_effect2) +
-ggtitle("Predicted Maternal Deaths by Ethnicity (without offset)")
+ggtitle("Predicted Maternal Deaths by Ethnicity and Dobbs Era (without offset)")
 
 ```
 
-
-
-```{r}
-ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
-  geom_point() +
-  geom_line(aes(group = Age_Group)) +
-  facet_wrap(~ Age_Group) +
-  labs(title = "Maternal Deaths Over Time by Age Group")
-```
-
+### This utilizes the offset model to predict maternal deaths over years by ethnicity
 ```{r}
 library(ggplot2)
 
@@ -837,6 +787,26 @@ plot(year_eth) +
   theme_minimal()
 ```
 
+###This is a plot of maternal deaths over time by Ethnicity facet wrapped by Ethnicty by only utilizing dataframe data
+```{r}
+ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Ethnicity)) +
+  geom_point() +
+  geom_line(aes(group = Ethnicity)) +
+  facet_wrap(~ Ethnicity) +
+  labs(title = "Maternal Deaths Over Time by Age Group")
+```
+
+###This is a plot of maternal deaths over time by age group facet wrapped by age group by only utilizing dataframe data
+```{r}
+ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
+  geom_point() +
+  geom_line(aes(group = Age_Group)) +
+  facet_wrap(~ Age_Group) +
+  labs(title = "Maternal Deaths Over Time by Age Group")
+```
+
+###This is a plot of maternal deahs over time by age group facet wrapped by dobbs era by only utilizing dataframe data
+
 ```{r}
 library(ggplot2)
 
@@ -847,6 +817,8 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Dobbs_Era)) +
   labs(title = "Maternal Deaths Over Time by Dobbs Era")
 ```
 
+###This is a plot of maternal deaths by Dobbs Era by  age group facet wrapped by age group by only utilizing dataframe data. Facet wrap is splitting plots into different factor levels of age group
+
 ```{r}
 library(ggplot2)
 
@@ -856,7 +828,17 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Age_Group)) +
   facet_wrap(~ Age_Group) +
   labs(title = "Maternal Deaths (Pre V Post Dobbs Era by Age Group")
 ```
+###This is a plot of maternal deaths by Dobbs Era by  Ethnicity facet wrapped by Ethnicity by only utilizing dataframe data facet wrap creates small plots for each level so maybe ethnicity is too much
+```{r}
+library(ggplot2)
 
+ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Ethnicity)) +
+  geom_point() +
+  geom_line(aes(group = Ethnicity)) +
+  facet_wrap(~ Ethnicity) +
+  labs(title = "Maternal Deaths (Pre V Post Dobbs Era by Ethnicity")
+```
+###These are boxplots of maternal deaths that show their distribution  by each fixed effect 
 ```{r}
 
 ggplot(deaths_df3, aes(x = Age_Group, y = Maternal_Deaths)) +
@@ -879,7 +861,7 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 
 
 
-
+##This is a trend of predicted maternal deaths by ethnicity over time by utilizing the model for prediction and  mean data for lines and points
 
 
 ```{r}
@@ -899,6 +881,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = predicted, color 
   theme_minimal()
 
 ```
+##This is a graph showing observed deaths over time by using statistics of sum of dataframe data
 
 ```{r}
 library(ggplot2)
@@ -910,6 +893,8 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, 
   theme_minimal()
 ```
 
+
+#We used variable maternal mortality rate to see maternal mortality rate over time by ethnicity and by using dataframe data and averages to plot lines and points
 ```{r}
 library(ggplot2)
 library(ggeffects)
@@ -924,6 +909,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
   ) +
   theme_minimal()
 ```
+#We used variable maternal mortality rate to see maternal mortality rate over time by ethnicity (facet wrapped by Dobbs Era) and by using dataframe data and averages to plot lines and points
 
 ```{r}
 library(ggplot2)
@@ -931,8 +917,9 @@ library(ggeffects)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
   stat_summary(fun = mean, geom = "line", size = 1) +
   stat_summary(fun = mean, geom = "point") +
+  facet_wrap(~Dobbs_Era)+
   labs(
-    title = "Maternal Mortality Rate Over Time by Ethnicity",
+    title = "Maternal Mortality Rate Over Time by Ethnicity(facet wrapped by Dobbs Era)",
     x = "Year",
     y = "Maternal Mortaity Rate (per 100,000 live births)"
   ) +
@@ -941,6 +928,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
 #I tried to do age group but would not work
 ```
 
+#We used variable maternal mortality rate to see maternal mortality rate over time by age group and by using dataframe data and averages to plot lines and points
 ```{r}
 library(ggplot2)
 library(ggeffects)
@@ -951,7 +939,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
        x = "Year", y = "Maternal Mortaity Rate (per 100,000 live births)") +
   theme_minimal()
 ```
-
+#We used variable maternal mortality rate to see maternal mortality rate over time by Dobbs Era and by using dataframe data and averages to plot lines and points
 ```{r}
 library(ggplot2)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Dobbs_Era)) +

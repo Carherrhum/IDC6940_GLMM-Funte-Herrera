@@ -721,23 +721,53 @@ install.packages("ggeffects")  # if not yet installed
 ```{r}
 
 library(ggeffects)
+library(patchwork)
 
 #  predictions by ethnicity
+pred_eth1 <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
+plot(pred_eth1)  + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity ",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity"
+  )+
+  theme(plot.title = element_text(size =12 , face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
 
 pred_eth <- ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth) + ggtitle("Predicted Maternal Deaths by Ethnicity (without offset")
+plot(pred_eth) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity ",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity"
+  )+
+  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
 
-pred_eth <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth) + ggtitle("Predicted Maternal Deaths by Ethnicity (with offset")
 
-#  predictions by Age Group
-pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
-plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group (without offset)")
-
-pred_age <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
-plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group (with offset")
 
 ```
+
+
+#  predictions by Age Group
+
+```{r}
+
+library(ggeffects)
+library(patchwork)
+
+pred_age1 <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
+plot(pred_age1) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ labs(
+    title="Predicted Maternal Deaths by Age Grou",
+      subtitle= "with offset", y="Maternal Deaths", x="Age Group"
+  )+
+  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
+plot(pred_age) +  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +labs(
+    title="Predicted Maternal Deaths by Age Group ",
+      subtitle= "without offset", y="Maternal Deaths", x="Age Group"
+  )+
+  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+```
+
 
 
 ###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and age group
@@ -745,14 +775,26 @@ plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group (with offset")
 
 ```{r}
 library(ggeffects)
+library(patchwork)
 ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
 
-plot(ethnicityage_effect) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity and age group (with offset)")
+p1<-plot(ethnicityage_effect) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity and Age Group",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
 
 ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
-plot(ethnicityage_effect2) +
-  ggtitle("Predicted Maternal Deaths by Ethnicity and age group (without offset)")
+p2<-plot(ethnicityage_effect2) +theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title="Predicted Maternal Deaths by Ethnicity and Age Group",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+p1 + p2
 
 
 ```
@@ -764,50 +806,58 @@ plot(ethnicityage_effect2) +
 ```{r}
 #AS you can see plottting without offset leads to faulty plots--no way to over look?
 library(ggeffects)
+library(patchwork)
 ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobbs_Era"))
 
 
-plot(ethnicitydobbs_effect) +
- ggtitle("Predicted Maternal Deaths by Ethnicity and Dobbs Era (with offset)")
+p1<-plot(ethnicitydobbs_effect) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity and Dobbs Era",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Dobbs Era"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
 
 ethnicitydobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity",  "Dobbs_Era"))
-plot(ethnicitydobbs_effect2) +
-ggtitle("Predicted Maternal Deaths by Ethnicity and Dobbs Era (without offset)")
+p2<-plot(ethnicitydobbs_effect2) +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title="Predicted Maternal Deaths by Ethnicity and Dobbs Era",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Dobbs Era"
+  )+
+  theme(plot.title = element_text(size = 8, face = "bold"), plot.subtitle = element_text(size = 8, face = "italic")) +theme(plot.subtitle = element_text(hjust = 0.5))
+  
+
+p1 + p2
 
 ```
 
 ### This utilizes the offset model to predict maternal deaths over years by ethnicity with offset and without offset
 ```{r}
 library(ggplot2)
+library(patchwork)
 
 # Predicted values for Year by Ethnicity
 year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
 
 # Plot
-plot(year_eth) +
+p1<-plot(year_eth) +
   labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
-       x = "Year", y = "Predicted Maternal Deaths") +
-  theme_minimal()
+       x = "Year", y = "Predicted Maternal Deaths", subtitle = "with offset") + theme(plot.title = element_text(size = 9), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
 
 
 # Predicted values for Year by Ethnicity
 year_eth2 <- ggpredict(allno_glmmodel_nb, terms = c("Year", "Ethnicity"))
 
 # Plot
-plot(year_eth2) +
-  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity(without offset)",
-       x = "Year", y = "Predicted Maternal Deaths") +
-  theme_minimal()
+p2<-plot(year_eth2) +
+  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity", subtitle= "without offset",
+       x = "Year", y = "Predicted Maternal Deaths") +theme(plot.title = element_text(size = 9), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+p1/p2
 ```
 
-###This is a plot of maternal deaths over time by Ethnicity facet wrapped by Ethnicty by only utilizing dataframe data
-```{r}
-ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Ethnicity)) +
-  geom_point() +
-  geom_line(aes(group = Ethnicity)) +
-  facet_wrap(~ Ethnicity) +
-  labs(title = "Maternal Deaths Over Time by Ethnicity")
-```
+
 
 ###This is a plot of maternal deaths over time by age group facet wrapped by age group by only utilizing dataframe data
 ```{r}
@@ -829,27 +879,8 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Dobbs_Era)) +
   labs(title = "Maternal Deaths Over Time by Dobbs Era")
 ```
 
-###This is a plot of maternal deaths by Dobbs Era by  age group facet wrapped by age group by only utilizing dataframe data. Facet wrap is splitting plots into different factor levels of age group
 
-```{r}
-library(ggplot2)
 
-ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Age_Group)) +
-  geom_point() +
-  geom_line(aes(group = Age_Group)) +
-  facet_wrap(~ Age_Group) +
-  labs(title = "Maternal Deaths (Pre V Post Dobbs Era by Age Group")
-```
-###This is a plot of maternal deaths by Dobbs Era by  Ethnicity facet wrapped by Ethnicity by only utilizing dataframe data facet wrap creates small plots for each level so maybe ethnicity is too much
-```{r}
-library(ggplot2)
-
-ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths, color = Ethnicity)) +
-  geom_point() +
-  geom_line(aes(group = Ethnicity)) +
-  facet_wrap(~ Ethnicity) +
-  labs(title = "Maternal Deaths (Pre V Post Dobbs Era by Ethnicity")
-```
 ###These are boxplots of maternal deaths that show their distribution  by each fixed effect 
 ```{r}
 
@@ -859,6 +890,7 @@ ggplot(deaths_df3, aes(x = Age_Group, y = Maternal_Deaths)) +
 
 ggplot(deaths_df3, aes(x = Ethnicity, y = Maternal_Deaths)) +
   geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(title = "Distribution of Maternal Deaths by Ethnicity")
 
 ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +

@@ -806,7 +806,7 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Ethnicity)) +
   geom_point() +
   geom_line(aes(group = Ethnicity)) +
   facet_wrap(~ Ethnicity) +
-  labs(title = "Maternal Deaths Over Time by Age Group")
+  labs(title = "Maternal Deaths Over Time by Ethnicity")
 ```
 
 ###This is a plot of maternal deaths over time by age group facet wrapped by age group by only utilizing dataframe data
@@ -877,23 +877,8 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 ##This is a trend of predicted maternal deaths by ethnicity over time by utilizing the model for prediction and  mean data for lines and points
 
 
-```{r}
 
-#errror because reokkacenebt g=has 5591 values and data has 675
-library(ggplot2)
-library(ggeffects)
 
-# Add predicted values to your dataset
-deaths_df3$predicted <- predict(all_glmmodel_nb, type = "response")
-
-ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = predicted, color = Ethnicity)) +
-  stat_summary(fun = mean, geom = "line", size = 1) +
-  stat_summary(fun = mean, geom = "point") +
-  labs(title = "Trend of Predicted Maternal Deaths by Ethnicity Over Time",
-       x = "Year", y = "Predicted Maternal Deaths") +
-  theme_minimal()
-
-```
 ##This is a graph showing observed deaths over time by using statistics of sum of dataframe data
 
 ```{r}
@@ -952,17 +937,6 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
        x = "Year", y = "Maternal Mortaity Rate (per 100,000 live births)") +
   theme_minimal()
 ```
-#We used variable maternal mortality rate to see maternal mortality rate over time by Dobbs Era and by using dataframe data and averages to plot lines and points
-```{r}
-library(ggplot2)
-ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Dobbs_Era)) +
-  stat_summary(fun = mean, geom = "line", size = 1) +
-  stat_summary(fun = mean, geom = "point") +
-  labs(title = "Observed Maternal Deaths Over Time by Dobbs Era",
-       x = "Year", y = "Observed Maternal Deaths") +
-  theme_minimal()
-```
-
 
 
 ### Modeling and Results

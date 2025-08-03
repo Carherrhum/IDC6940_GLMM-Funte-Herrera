@@ -710,11 +710,16 @@ sjPlot::tab_model(all_glmmodel_nb)#withh offset
 
 
 
-###These are ppredictions of maternal deaths utilizing the models of with and without offset by each individual fixed effect (Ethnicity, Age Group, Dobbs Era) as you can see there are vast differences between the plots with offset and without offfset
+###These are ppredictions of maternal deaths utilizing the models of with and without offset by each individual fixed effect (Ethnicity, Age Group) as you can see there are vast differences between the plots with offset and without offfset. predictions by Dobbs was approximately similar so I included only offset
 
 
 ```{r}
 install.packages("ggeffects")  # if not yet installed
+
+```
+
+```{r}
+
 library(ggeffects)
 
 #  predictions by ethnicity
@@ -732,16 +737,12 @@ plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group (without offset
 pred_age <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
 plot(pred_age) + ggtitle("Predicted Maternal Deaths by Age Group (with offset")
 
-# Predictions by Dobbs Era
-pred_dobbs <- ggpredict(allno_glmmodel_nb, terms = "Dobbs_Era")
-plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era (wthout offset")
-
-pred_dobbs <- ggpredict(allno_glmmodel_nb, terms = "Dobbs_Era")
-plot(pred_dobbs) + ggtitle("Predicted Maternal Deaths by Dobbs Era (with offset")
-
 ```
 
+
 ###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and age group
+
+
 ```{r}
 library(ggeffects)
 ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
@@ -758,6 +759,8 @@ plot(ethnicityage_effect2) +
 
 ###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Dobbs Era
 
+####SHOW Up pplease because strangest looking
+
 ```{r}
 #AS you can see plottting without offset leads to faulty plots--no way to over look?
 library(ggeffects)
@@ -773,7 +776,7 @@ ggtitle("Predicted Maternal Deaths by Ethnicity and Dobbs Era (without offset)")
 
 ```
 
-### This utilizes the offset model to predict maternal deaths over years by ethnicity
+### This utilizes the offset model to predict maternal deaths over years by ethnicity with offset and without offset
 ```{r}
 library(ggplot2)
 
@@ -783,6 +786,16 @@ year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
 # Plot
 plot(year_eth) +
   labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
+       x = "Year", y = "Predicted Maternal Deaths") +
+  theme_minimal()
+
+
+# Predicted values for Year by Ethnicity
+year_eth2 <- ggpredict(allno_glmmodel_nb, terms = c("Year", "Ethnicity"))
+
+# Plot
+plot(year_eth2) +
+  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity(without offset)",
        x = "Year", y = "Predicted Maternal Deaths") +
   theme_minimal()
 ```

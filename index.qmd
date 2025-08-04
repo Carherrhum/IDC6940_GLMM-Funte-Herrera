@@ -747,8 +747,9 @@ sjPlot::tab_model(all_glmmodel_nb,
 
 
 
-This is model suary output with beta coefficents exponetiated into incidence rates ratios
+This is model summary output with beta coefficients exponentiation into incidence rates ratios
 ```{r}
+library(sjPlot)
 tab_model(all_glmmodel_nb,
           title = " GLMM negative binomial model with offset")
 

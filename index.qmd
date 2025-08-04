@@ -127,7 +127,7 @@ Densities are seen as counts per volume and can be modeled with NB and offset va
 
 ### Data Exploration and Visualization
 
-The data we used come from the National Vital Statistics System, an organization that provides national data about births, deaths, marriages, divorces, and fetal deaths. It is a collaboration between the National Center for Health Statistics (NCHS) (a part of the CDC) and state vital records offices. {create citation https://www.cdc.gov/nchs/nvss/about_nvss.htm} This dataset is the Vital Statistics Rapid Release (VSRR) Provisional Maternal Death Counts and Rates, in the form of a .csv file. The dataset contains monthly death counts and death rates  from 2019 to 2024 by race and ethnicity, age and overall. Rates are maternal deaths per 100,000 live birthd. For this dataset, a maternal death is defined as "the death of a woman while pregnant or within 42 days of termination of pregnancy irrespective of the duration and the site of the pregnancy, from any cause related to or aggravated by the pregnancy or its management, but not from accidental or incidental causes." {create citation https://www.cdc.gov/nchs/nvss/vsrr/provisional-maternal-deaths-rates.htm}
+The data we used come from the National Vital Statistics System, an organization that provides national data about births, deaths, marriages, divorces, and fetal deaths. It is a collaboration between the National Center for Health Statistics (NCHS) (a part of the CDC) and state vital records offices. {create citation https://www.cdc.gov/nchs/nvss/about_nvss.htm} This dataset is the Vital Statistics Rapid Release (VSRR) Provisional Maternal Death Counts and Rates, in the form of a .csv file. The dataset contains monthly death counts and death rates  from 2019 to 2024 by race and ethnicity, age and overall. Rates are maternal deaths per 100,000 live births. For this dataset, a maternal death is defined as "the death of a woman while pregnant or within 42 days of termination of pregnancy irrespective of the duration and the site of the pregnancy, from any cause related to or aggravated by the pregnancy or its management, but not from accidental or incidental causes." {create citation https://www.cdc.gov/nchs/nvss/vsrr/provisional-maternal-deaths-rates.htm}
 
 -   Present initial findings and insights through visualizations.
 
@@ -155,6 +155,8 @@ if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
 library(glmmTMB)
 install.packages("ggeffects") 
 library(ggeffects)
+install.packages("AICcmodavg")
+library(AICcmodavg)
 ```
 
 
@@ -170,7 +172,7 @@ df <- read.csv("data/VSRR_Provisional_Maternal_Death_Counts_and_Rates_20250726.c
 df<-df%>% 
   rename(Year= Year.of.Death, Month= Month.of.Death, Maternal_Deaths= Maternal.Deaths, Live_Births= Live.Births, Maternal_Mortality_Rate= Maternal.Mortality.Rate, Time_Period= Time.Period, Month_Ending_Date= Month.Ending.Date, Data_As_Of= Data.As.Of) 
   
-filtered_df<- df%>% filter(Maternal_Deaths > 0, Live_Births > 100) #Filtering out rare combinations
+filtered_df<- df%>% filter(Maternal_Deaths > 0, Live_Births > 100) #Filtering out potential stange data
   
 test_df <- na.omit(filtered_df)#filtered na
 
@@ -248,12 +250,7 @@ df_total_year <-deaths_df%>%
 df_total_year
 
 
-#deaths_cleaned <- deaths_df3 %>%
-#  filter(Age_Group != "Unknown",Ethnicity != "Unknown") %>%
- # droplevels()
 
-#deaths_df2<-deaths_df %>%
-#  filter(!(Is_Total & (is.na(Ethnicity) | is.na(Age_Group))))###filter out is total if ethnicity or age when total is true
 
 
 ```
@@ -420,444 +417,59 @@ plot_histogram(deaths_df_age$Maternal_Deaths, title='Histogram of Maternal Death
 plot_histogram(total_df$Maternal_Deaths,title='Histogram of Maternal Deaths - Total')
 ```
 
-```{r}
-#check overdispersion by for ethnicity data
-deaths_df_ethnic %>% summarize(mean(Maternal_Deaths),
-var(Maternal_Deaths))
-#check overdispersion for age data
-deaths_df_age %>% summarize(mean(Maternal_Deaths),var(Maternal_Deaths))
-#check overdispersion for total data
-total_df %>% summarize(mean(Maternal_Deaths),
-var(Maternal_Deaths))
-```
 
-<<<<<<< HEAD
-=======
+###This is a graph showing observed deaths over time by using statistics of sum of dataframe data
 
->>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
-```{r}
-poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
-                              offset=log(Live_Births),
-                              family = poisson(link = "log"), 
-                              data = deaths_df3)
-poissonmodel_glmm_all
-```
-
-
-
-```{r}
-check_overdispersion(poissonmodel_glmm_all)
-
-```
-##overdispersion still detected
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
-
-```{r}
-poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
-                              offset=log(Live_Births),
-                              family = poisson(link = "log"), 
-                              data = deaths_df3)
-poissonmodel_glmm_all
-```
-
-
-
-```{r}
-check_overdispersion(poissonmodel_glmm_all)
-
-```
-##overdispersion still detected
-
-
-
-
-
-```{r}
-##with offset # all fixed effects
-all_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + Age_Group +Dobbs_Era+ (1|Year),
-  offset=log(Live_Births),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(all_glmmodel_nb)
-
-```
-
-
-
-
-
-```{r}
-ethnicity_agegroup_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity+ Age_Group + (1|Year),
-  offset=log(Live_Births),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(ethnicity_agegroup_glmmodel_nb)
-```
-
-
-```{r}
-
-##with no offset # all fixed effects #with not offset we can just use maternal mmortality rate per 100,0000 live_births
-allno_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity + Age_Group+ Dobbs_Era + (1 |Year),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(allno_glmmodel_nb)
-
-```
-
-```{r}
-ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
-  Maternal_Deaths ~  Ethnicity+ Age_Group + (1 |Year),
-  family = nbinom2,
-  data = deaths_df3
-)
-summary(ethnicity_agegroupno_glmmodel_nb)
-```
-
-
-
-
-
-```{r setup, include=FALSE}
-options(repos = c(CRAN = "https://cloud.r-project.org"))
-if (!require("performance"))install.packages("performance")#if required to install
-library(performance)
-
-if (!require("DHARMa"))install.packages("DHARMa")#if required to install
-library(DHARMa)
-
-if (!require("sjPlot"))install.packages("sjPlot")#if required to install
-library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
-if (!require("MuMIN"))install.packages("MuMIn")
-library(MuMIn)
-if (!require("bbmle"))install.packages("bbmle")
-library("bbmle")
-```
-
-
-
-
-
-```{r}
-bbmle::AICtab(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
-
-
-```
-
-It is said that even though not using offset has lower A1c it is incorrect model because it does not include live births or correct variance structure so I will be testing both. While AIC for not including offset is lower, assumptions are violated. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure even if AIC is higher.
-
-```{r}
-
-
-MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
-
-```
-
-
-
-
-
-
-
-
-
-
-###checking performance, R2 and singlulairty of effect variable and collinearity of model without offset
-
-```{r}
-#checking performance, R2 and singlulairty of effect variable and colliarnity of model without offset
-performance::check_model(allno_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
-performance::r2(allno_glmmodel_nb)
-check_singularity(allno_glmmodel_nb)
-check_collinearity(allno_glmmodel_nb)
-```
-
-
-###checking performance, R2 and singlulairty of effect variable and collinearity of model with offset
-`
-```{r}
-performance::check_model(all_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
-performance::r2(all_glmmodel_nb)
-check_singularity(all_glmmodel_nb)
-check_collinearity(all_glmmodel_nb)
-```
-###The assumption graphs are the same for both models with and without offset. I included only those with offset cof conciseness. These are assumptions that need to be met for model to be acceptable.
-
-##According to this graph The response variable and the predictors have a linear relationship within the levels of random effect
-
-```{r}
-
-
-#The response variable and the predictors have a linear relationship within the levels of random effect
-# Base partial residuals (approximate)
-
-resid_vals<-resid(all_glmmodel_nb,type = "pearson")
-fitted_vals <- predict(all_glmmodel_nb,type = "response")
-
-x <- jitter(fitted_vals)
-y<-resid_vals
-
-plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
-abline(h = 0, col = "red")#where residuals equal zero
-lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
-
-
-```
-
-###According to this graph there is Normality of random effect because points fall close to red line of Q-Q plot. The histogram falls a somewhat nromal distribution. And the blue density of the random effect distribution lies mostly within the red dashed line of the distribution of ideal normal distribution with same means. The approximmately normal blue density of random effect year could be expected to have mild deviations since we are workking with count data
-
-```{r}
-#Normality of Random effects
-
-#Points fall close to red line so random effects are approximately normal
-
-
-re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
-
-qqnorm(re_year, main = "Q-Q Plot of Random Effect of (Year)")
-qqline(re_year, col = "red")#points should roughly lie by this line if normal
-hist(re_year, main = "Histogram of Random Effects of model ", xlab = "Random effect (Year)")
-
-df_re <- data.frame(re = re_year)
-
-ggplot(df_re, aes(x = re_year)) +
-  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
-  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
-                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
-  ggtitle("Density of Random Effect (Year) model  with Normal Curve")
-
-#since most of blue density is within red line 
-#The random effect of year is approximately normal with some mild deviations which is common with count models 
-```
-
-### The Independence of residual and Random Effects assummption is met because the dots of the residuals of the random effect (year) falls on the red refence line of  quantiles of random interceppt estimates vesus quantiles of normal distribution. Additionally a blue Loess lines is approximately close to this red reference lines which would also indicate independene of residuals and random effects.
-```{r}
-#  Independence of Residuals and Random Effects
-#random effects of year
-#residuals leftover variation after accounting for fixed and random effects
-#random effects show between group variation (how each group's slope or intercet differs)
-#if are independent then model is correctly partiioning information
-#residuals capture individual level random noise not exxplained by model and if
-#there is no tie between residuals or random effects it upholds key assumption 
-#that the random effects and residuals are independent of each other
-re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
-
-
-qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
-qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
-
-
-
-```
-
-
-
-
-
-
-
-
-
-###This tests if model is overdisersed since the ratio given is around ,0.051 it is not indicative of overdisppersion and neither is the p value which is much grater that (p <0.05) which also indicates there is no significant overdispersion with this model.
-
-
-```{r}
-
-overdisp_fun <- function(all_glmmodel_nb) {
-  rdf <- df.residual(all_glmmodel_nb)
-  rp <- residuals(all_glmmodel_nb, type = "pearson")
-  Pearson.chisq <- sum(rp^2)
-  prat <- Pearson.chisq / rdf
-  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
-  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
-}
-
-overdisp_fun(all_glmmodel_nb)
-
-#ratio is around 1 which is good and not too indicative of overdispersion
-#pp-value is greater that P<0.005 so that means there is no significant overdispersion
-```
-
-
-
-
-
-####The coefficients of not using an offset has affected the estimates in a poor manner
-
-```{r}
-sjPlot::tab_model(allno_glmmodel_nb)##coefficients of not using offset is not good and can effect estimates
-
-```
-
-
-
-```{r}
-sjPlot::tab_model(all_glmmodel_nb)#withh offset
-
-```
-
-
-
-
-
-###These are ppredictions of maternal deaths utilizing the models of with and without offset by each individual fixed effect (Ethnicity, Age Group) as you can see there are vast differences between the plots with offset and without offfset. predictions by Dobbs was approximately similar so I included only offset
-
-
-```{r}
-install.packages("ggeffects")  # if not yet installed
-
-```
-
-```{r}
-
-library(ggeffects)
-library(patchwork)
-
-#  predictions by ethnicity
-pred_eth1 <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth1)  + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
- labs(
-    title="Predicted Maternal Deaths by Ethnicity ",
-      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity"
-  )+
-  theme(plot.title = element_text(size =12 , face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-pred_eth <- ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
- labs(
-    title="Predicted Maternal Deaths by Ethnicity ",
-      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity"
-  )+
-  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-
-
-```
-
-
-#  predictions by Age Group
-
-```{r}
-
-library(ggeffects)
-library(patchwork)
-
-pred_age1 <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
-plot(pred_age1) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ labs(
-    title="Predicted Maternal Deaths by Age Grou",
-      subtitle= "with offset", y="Maternal Deaths", x="Age Group"
-  )+
-  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
-plot(pred_age) +  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +labs(
-    title="Predicted Maternal Deaths by Age Group ",
-      subtitle= "without offset", y="Maternal Deaths", x="Age Group"
-  )+
-  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-```
-
-
-
-###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and age group
-
-
-```{r}
-library(ggeffects)
-library(patchwork)
-ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
-
-p1<-plot(ethnicityage_effect) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
- labs(
-    title="Predicted Maternal Deaths by Ethnicity and Age Group",
-      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
-  )+
-  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
-p2<-plot(ethnicityage_effect2) +theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(
-    title="Predicted Maternal Deaths by Ethnicity and Age Group",
-      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
-  )+
-  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-p1 + p2
-
-
-```
-
-###These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Dobbs Era
-
-####SHOW Up pplease because strangest looking
-
-```{r}
-#AS you can see plottting without offset leads to faulty plots--no way to over look?
-library(ggeffects)
-library(patchwork)
-ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobbs_Era"))
-
-
-p1<-plot(ethnicitydobbs_effect) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
- labs(
-    title="Predicted Maternal Deaths by Ethnicity and Dobbs Era",
-      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Dobbs Era"
-  )+
-  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-ethnicitydobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity",  "Dobbs_Era"))
-p2<-plot(ethnicitydobbs_effect2) +
-theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(
-    title="Predicted Maternal Deaths by Ethnicity and Dobbs Era",
-      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Dobbs Era"
-  )+
-  theme(plot.title = element_text(size = 8, face = "bold"), plot.subtitle = element_text(size = 8, face = "italic")) +theme(plot.subtitle = element_text(hjust = 0.5))
-  
-
-p1 + p2
-
-```
-
-### This utilizes the offset model to predict maternal deaths over years by ethnicity with offset and without offset
 ```{r}
 library(ggplot2)
-library(patchwork)
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Ethnicity)) +
+  stat_summary(fun = sum, geom = "line", size = 1) +
+  stat_summary(fun = sum, geom = "point") +
+  labs(title = "Observed Maternal Deaths Over Time by Ethnicity",
+       x = "Year", y = "Observed Maternal Deaths") +
+  theme_minimal()
+```
+###This is a graph showing observed deaths over time by using statistics of sum of dataframe data
 
-# Predicted values for Year by Ethnicity
-year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
+```{r}
+library(ggplot2)
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Age_Group)) +
+  stat_summary(fun = sum, geom = "line", size = 1) +
+  stat_summary(fun = sum, geom = "point") +
+  labs(title = "Observed Maternal Deaths Over Time by Age Groupp",
+       x = "Year", y = "Observed Maternal Deaths") +
+  theme_minimal()
+```
 
-# Plot
-p1<-plot(year_eth) +
-  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
-       x = "Year", y = "Predicted Maternal Deaths", subtitle = "with offset") + theme(plot.title = element_text(size = 9), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+#We used variable maternal mortality rate to see maternal mortality rate over time by ethnicity and by using dataframe data and averages to plot lines and points
+```{r}
+library(ggplot2)
+library(ggeffects)
 
-
-# Predicted values for Year by Ethnicity
-year_eth2 <- ggpredict(allno_glmmodel_nb, terms = c("Year", "Ethnicity"))
-
-# Plot
-p2<-plot(year_eth2) +
-  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity", subtitle= "without offset",
-       x = "Year", y = "Predicted Maternal Deaths") +theme(plot.title = element_text(size = 9), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-p1/p2
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  labs(
+    title = "Maternal Mortality Rate Over Time by Ethnicity",
+    x = "Year",
+    y = "Maternal Mortaity Rate (per 100,000 live births)"
+  ) +
+  theme_minimal()
 ```
 
 
+
+###We used variable maternal mortality rate to see maternal mortality rate over time by age group and by using dataframe data and averages to plot lines and points
+```{r}
+library(ggplot2)
+library(ggeffects)
+ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Age_Group)) +
+  stat_summary(fun =mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point") +
+  labs(title = "Maternal Mortality Rate Over Time by Age Group",
+       x = "Year", y = "Maternal Mortaity Rate (per 100,000 live births)") +
+  theme_minimal()
+```
 
 ###This is a plot of maternal deaths over time by age group facet wrapped by age group by only utilizing dataframe data
 ```{r}
@@ -899,73 +511,295 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 
 ```
 
-
-
-
-
-
-
-##This is a trend of predicted maternal deaths by ethnicity over time by utilizing the model for prediction and  mean data for lines and points
-
-
-
-
-##This is a graph showing observed deaths over time by using statistics of sum of dataframe data
-
 ```{r}
-library(ggplot2)
-ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Ethnicity)) +
-  stat_summary(fun = sum, geom = "line", size = 1) +
-  stat_summary(fun = sum, geom = "point") +
-  labs(title = "Observed Maternal Deaths Over Time by Ethnicity",
-       x = "Year", y = "Observed Maternal Deaths") +
-  theme_minimal()
-```
-##This is a graph showing observed deaths over time by using statistics of sum of dataframe data
-
-```{r}
-library(ggplot2)
-ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Age_Group)) +
-  stat_summary(fun = sum, geom = "line", size = 1) +
-  stat_summary(fun = sum, geom = "point") +
-  labs(title = "Observed Maternal Deaths Over Time by Age Groupp",
-       x = "Year", y = "Observed Maternal Deaths") +
-  theme_minimal()
-```
-#We used variable maternal mortality rate to see maternal mortality rate over time by ethnicity and by using dataframe data and averages to plot lines and points
-```{r}
-library(ggplot2)
-library(ggeffects)
-
-ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Ethnicity)) +
-  stat_summary(fun = mean, geom = "line", size = 1) +
-  stat_summary(fun = mean, geom = "point") +
-  labs(
-    title = "Maternal Mortality Rate Over Time by Ethnicity",
-    x = "Year",
-    y = "Maternal Mortaity Rate (per 100,000 live births)"
-  ) +
-  theme_minimal()
+#check overdispersion by for ethnicity data
+deaths_df_ethnic %>% summarize(mean(Maternal_Deaths),
+var(Maternal_Deaths))
+#check overdispersion for age data
+deaths_df_age %>% summarize(mean(Maternal_Deaths),var(Maternal_Deaths))
+#check overdispersion for total data
+total_df %>% summarize(mean(Maternal_Deaths),
+var(Maternal_Deaths))
 ```
 
+<<<<<<< HEAD
+=======
 
-
-#We used variable maternal mortality rate to see maternal mortality rate over time by age group and by using dataframe data and averages to plot lines and points
-```{r}
-library(ggplot2)
-library(ggeffects)
-ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Age_Group)) +
-  stat_summary(fun =mean, geom = "line", size = 1) +
-  stat_summary(fun = mean, geom = "point") +
-  labs(title = "Maternal Mortality Rate Over Time by Age Group",
-       x = "Year", y = "Maternal Mortaity Rate (per 100,000 live births)") +
-  theme_minimal()
-```
-
+>>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
 
 ### Modeling and Results
 
--   Explain your data preprocessing and cleaning steps.
+Our Data preprocessing started by renaming column names, filtering out data by only including observations that have maternal deaths above zero values and live births above 100 births so our future model has appropriate data to work and removed observations with 
+NA values. Due to the nature of the Dataframe, the fixed variables of ethnicity and age group had to be mutated from the variables Group and Subgroup. The variable Group would have values such as, "Race and Hispanic origin"  or "Age" and the variable Subgroup would have the specific value applicable to the Group. For example, if the Group value was "Race and Hispanic origin", the Subgroup would have a value such as "'Hispanic", "Black, with no Hispanic Origin", "White, with no Hispanic origin", etc. If the variable Group was "Age", Subgroup values could be "25 and under", 25-39", "Or 40 years and over".  The variable, Ethnicity, was extracted from values from Subgroup when the variable Group had the value "Race and Hispanic Origin" and if that Group value  was not "Race and Hispanic Origin" the Ethnicity observation would be "NA". The variable Age Group was similarly created when the Group value "Age" is present and thus the Age Group value would be extracted from the Subgroup value and if the Group value is not "Age" then NA would be put as the value for Age Group. We made Year, Month, Ethnicity, and Age_Group into factor values.When conducting models Age_Group(unknown) were not estimable which caused  rank deficiency but for model integrity we could not remove that factor.  
+We created 2 data frames one for the ethnicity variable that would only have ethnicity values and removed any values in the subgroup that was not ethnicity and removed any values that were not applicable and additionally did the same for age group, afterwards we merged both dataframes. The final data frame we named all factor levels for Ethnicity and Age group and included a level for both called "Unknown" so that any non-applicable values would be replaced with the value "Unknown". The "Unknown" value was created so model building would execute when both Ethnicity and Age Group were placed as fixed values in a model. Finally, we created a variable called, Dobbs Era to denote whether the period was prior to the overturn of Roe v. Wade or after the overturn of Roe v. Wade. We created this variable to see if there would be any differences in maternal deaths based on that period. We created Dobbs Era by first creating a variable called Date that combines variables year, month, and the first day to make the variable date, and then the value "cutoff" of 2022-06-04 which is when Roe v. Wade was overturned. Pre-Dobbs value would be inputted if the date variable occurred before the cutoff otherwise the Post-Dobbs Value would be inputted. Dobbs Era is a factor fixed variable for the models we created. 
+We created models with different combinations of fixed variables of Ethnicity, Age Group, Dobbs Era and the random effect variable year.
+We first tested Poisson models and found that they all had significant evidence of overdispersion and thus a GLMM of negative binomial family was the best method for modeling this data. Parameters Age_GroupUnknown were not estimable" this is what's causing the rank deficiency.
+```{r}
+poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
+                              offset=log(Live_Births),
+                              family = poisson(link = "log"), 
+                              data = deaths_df3)
+poissonmodel_glmm_all
+```
+
+
+
+```{r}
+check_overdispersion(poissonmodel_glmm_all)
+
+```
+
+We also ran models including or excluding the offset (log(Live_Births)) to see if there were be differences in AIC and estimates. AIC is the value in which we used to see how well a model performed.
+The best performing models were those with the fixed effects Ethnicity, Age Group, and Dobbs Era and random effect Year. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models, however did drop the Age Group Unknown factor from inclusion.
+The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7)
+However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
+
+
+Thus our visualizations will be based on the model with offset and all fixed effects.
+
+```{r}
+##with offset # all fixed effects
+all_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + Age_Group +Dobbs_Era+ (1|Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(all_glmmodel_nb)
+
+```
+
+
+
+
+
+```{r}
+ethnicity_agegroup_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity+ Age_Group + (1|Year),
+  offset=log(Live_Births),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(ethnicity_agegroup_glmmodel_nb)
+```
+
+
+```{r}
+
+##with no offset # all fixed effects #with not offset we can just use maternal mortality rate per 100,0000 live_births
+allno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity + Age_Group+ Dobbs_Era + (1 |Year),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(allno_glmmodel_nb)
+
+```
+
+```{r}
+ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
+  Maternal_Deaths ~  Ethnicity+ Age_Group + (1 |Year),
+  family = nbinom2,
+  data = deaths_df3
+)
+summary(ethnicity_agegroupno_glmmodel_nb)
+```
+
+
+
+
+Our chosen model adheres by all assumptions of GLMM 
+
+- The response variable and the predictors have a linear relationship within the levels of random effects. 
+```{r}
+
+
+#The response variable and the predictors have a linear relationship within the levels of random effect
+# Base partial residuals (approximate)
+#Additionally a blue Loess lines is approximately close to this red reference line of 0 which helps evidence of linear relationship
+#there are no atterns with scatter plot
+resid_vals<-resid(all_glmmodel_nb,type = "pearson")
+fitted_vals <- predict(all_glmmodel_nb,type = "response")
+
+x <- jitter(fitted_vals)
+y<-resid_vals
+
+plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
+abline(h = 0, col = "red")#where residuals equal zero
+lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
+
+
+```
+
+
+
+- The response variable is assumed to follow a negative binomial distribution, with $\sigma^2>\mu$.
+
+
+
+
+- The residuals and random effects are independent.
+
+```{r}
+
+### The Independence of residual and Random Effects assumption is met because the dots of the residuals of the random effect (year) falls on the red refence line of  quantiles of random interceppt estimates vesus quantiles of normal distribution. A
+#  Independence of Residuals and Random Effects
+#random effects of year
+#residuals leftover variation after accounting for fixed and random effects
+#random effects show between group variation (how each group's slope or intercet differs)
+#if are independent then model is correctly partitioning information
+#residuals capture individual level random noise not explained by model and if
+#there is no tie between residuals or random effects it upholds key assumption 
+#that the random effects and residuals are independent of each other
+re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
+
+
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
+qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
+
+
+
+```
+
+
+
+
+- The random effects are assumed to be normally distributed, with mean 0 and variance $\sigma$.
+ 
+
+
+```{r}
+#Normality of Random effects
+
+###According to this graph there is Normality of random effect because points fall close to red line of Q-Q plot. The histogram falls a somewhat nromal distribution. And the blue density of the random effect distribution lies mostly within the red dashed line of the distribution of ideal normal distribution with same means. The approximmately normal blue density of random effect year could be expected to have mild deviations since we are workking with count data
+
+#Points fall close to red line so random effects are approximately normal
+
+
+re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
+
+qqnorm(re_year, main = "Q-Q Plot of Random Effect of (Year)")
+qqline(re_year, col = "red")#points should roughly lie by this line if normal
+hist(re_year, main = "Histogram of Random Effects of model ", xlab = "Random effect (Year)")
+
+df_re <- data.frame(re = re_year)
+
+ggplot(df_re, aes(x = re_year)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
+  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
+                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
+  ggtitle("Density of Random Effect (Year) model  with Normal Curve")
+
+#since most of blue density is within red line 
+#The random effect of year is approximately normal with some mild deviations which is common with count model
+ 
+```
+Our Chosen model Regression equation format 
+
+$$
+\begin{align*}
+\log(\mathbb{E}[\text{Maternal Deaths_i}]) &= \beta_0 
++ \beta_1 \cdot \text{Black}_i 
++ \beta_2 \cdot \text{White}_i 
++ \beta_3 \cdot \text{Hispanic}_i 
++ \beta_4 \cdot \text{American Indian or Alaska Native}_i 
++ \beta_5 \cdot \text{EthnicityUnknown}_i \\
+&+ \beta_6 \cdot \text{Age 25- 39}_i 
++ \beta_7 \cdot \text{Age 40 Plus}_i 
++ \beta_8 \cdot \text{Post Dobbs}_i 
++ b_{\text{Year}[i]}
++ \log(\text{Live Births}_i)
+\end{align*}
+$$
+The non offset model format:
+$$
+\begin{align*}
+\log(\mathbb{E}[\text{Maternal Deaths_i}]) &= \beta_0 
++ \beta_1 \cdot \text{Black}_i 
++ \beta_2 \cdot \text{White}_i 
++ \beta_3 \cdot \text{Hispanic}_i 
++ \beta_4 \cdot \text{American Indian or Alaska Native}_i 
++ \beta_5 \cdot \text{EthnicityUnknown}_i \\
+&+ \beta_6 \cdot \text{Age 25- 39}_i 
++ \beta_7 \cdot \text{Age 40 Plus}_i 
++ \beta_8 \cdot \text{Post Dobbs}_i 
++ b_{\text{Year}[i]}
+\end{align*}
+$$
+
+Our beta etimate outputs in a equation model format for the offset model:
+
+$$log({E}[\text{Maternal Deaths_i}]) = -8.79 + 1.30\cdot\text{Black}_i + 0.27\cdot\text{White}_i	+ 0.14\cdot\text{Hispanic}_i + 1.42\cdot\text{American Indian or Alaska Native}_i \\
++ 0.03\cdot\text{EthnicityUnknown}_i + 0.39 \cdot\text{Age 25- 39}_i + 1.80\cdot\text{Age 40 Plus}_i
+-0.23\cdot\text{Post Dobbs}_i + b_{\text{Year}[i]} + \log(\text{Live Births}_i)$$
+
+
+This is the offset model summary output:
+```{r}
+sjPlot::tab_model(all_glmmodel_nb,
+          transform = NULL, 
+          show.se = TRUE,         # show standard error
+          show.stat = TRUE,       # show z-values
+          show.p = TRUE,           
+          title = "GLMM negative binomial model with offset (Log Estimates)")
+```
+
+
+
+
+This is model suary output with beta coefficents exponetiated into incidence rates ratios
+```{r}
+tab_model(all_glmmodel_nb,
+          title = " GLMM negative binomial model with offset")
+
+#residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects
+#variance for random intercept of group year is 0.03
+#ICC- intraclass correlation- 0.00 of the proportion of the total variance explained by year, which is nothing year contributes nothing to explaining variation in maternal deaths it happens within years not between them
+##5.5% of proportion of variance explained  by fixed effects only, they only exlain 5.5% of variance in maternal deaths sad
+## conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
+
+##our low variability could be due to not having a random effect like state or abortion access fixed variable
+```
+Black women had a 267% higher rate of maternal mortality compared to reference group (Asian), holding all other groups constant
+White women have a  31% higher rate of maternal mortality compared to reference group (Asian) holding all other groups constant
+Hispanic women have a 15% higher rate of maternal mortality compared to reference group (Asian), holding all other groups constant
+American Indian or Alaska Native, have a 312% higher rate of maternal mortality compared to reference group Asian, holding all other groups constant
+Unknown Ethnicity was not  statistically significant
+Women 25-39 have a 37% higher rate of maternal mortality compared to reference group(Under 25) holding all other groups constant
+Women 40 years and older have a 505% higher  rate of maternal mortality compared to reference group (under 25), holding all other groups constant 
+There was a 20% lower rate in maternal mortality after Dobbs was passed compared to prior the passing of Dobbs
+residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects
+5.5% of proportion of variance explained  by fixed effects only, they only explain 5.5% of variance in maternal deaths
+conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
+Our low variability could be due to not having a random effect like state or other fixed effects to explain  variable
+
+TThis is brief glimpse at non offset glmm model table estimates: 
+```{r}
+sjPlot::tab_model(allno_glmmodel_nb,
+          transform = NULL, #original log and not exponiated
+          show.se = TRUE,         # show standard error
+          show.stat = TRUE,       # show z-values
+          show.p = TRUE,           
+          title = "Fixed Effects of GLMM model without offset (Log Estimates)")
+```
+
+```{r}
+sjPlot::tab_model(allno_glmmodel_nb,
+          title = "Fixed Effects from GLMM with outset(Incidence Rates Ratios)")
+
+#residual variance is 0.01, variance in maternal deaths not explained by fixed effects or random effects
+#variance for random intercept of group year is 0.03
+#ICC- intraclass correlation-0.71 of the proportion of the total variance explained by year, which is nothing year contributes nothing to explaining variation in maternal deaths it happens within years not between them--SUSPPICiOUSLY HIGH
+##97.1% of proportion of variance explained  by fixed effects only, they only explain 5.5% of variance in maternal deaths sad
+## conditional 99.2% is the proportion of variance contributed by fixed and random effectsToo good to be true
+```
+
+I will not be naming the incidence rates ratios for this not offset model since they are insanely inflated  for exampple white women have a 988% higher rate of mortality than asian reference group and the age group 40 years and olfer is not statistically significant in this model but unknown ethnicity is found to be statitically significant.
+Additionally, ICC- intra-class correlation-0.71 of the proportion of the total variance explained by year is Suspiciously High
+What is also too good to be true is the 97.1% of proportion of variance explained  by fixed effects only,
+and the conditional 99.2% is the proportion of variance contributed by fixed and random effects. Inflated R squared is further evidence of unaccounted exposure in a model without offset. 
+
+
 
 -   Present your key findings in a clear and concise manner.
 
@@ -974,11 +808,243 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
 -   **Tell a story about what the data reveals.**
 
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 5ff3583d31d40c93aaa9005a06c34bf67126bfd1
+
+
+
+
+
+
+
+
+
+
+
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+if (!require("performance"))install.packages("performance")#if required to install
+library(performance)
+
+if (!require("DHARMa"))install.packages("DHARMa")#if required to install
+library(DHARMa)
+
+if (!require("sjPlot"))install.packages("sjPlot")#if required to install
+library(sjPlot, quietly = FALSE, warn.conflicts = FALSE)
+if (!require("MuMIN"))install.packages("MuMIn")
+library(MuMIn)
+if (!require("bbmle"))install.packages("bbmle")
+library("bbmle")
+```
+
+
+
+```{r}
+
+
+MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+###checking performance, R2 and singlulairty of effect variable and collinearity of model with offset
+`
+```{r}
+performance::check_model(all_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
+check_singularity(all_glmmodel_nb)
+check_collinearity(all_glmmodel_nb)
+```
+
+This tests if model is overdispersed since the ratio given is around ,0.051 it is not indicative of overdisppersion and neither is the p value which is much grater that (p <0.05) which also indicates there is no significant overdispersion with this model.
+
+
+```{r}
+
+overdisp_fun <- function(all_glmmodel_nb) {
+  rdf <- df.residual(all_glmmodel_nb)
+  rp <- residuals(all_glmmodel_nb, type = "pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq / rdf
+  pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+  c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+
+overdisp_fun(all_glmmodel_nb)
+
+#ratio is around 1 which is good and not too indicative of overdispersion
+#pp-value is greater that P<0.005 so that means there is no significant overdispersion
+```
+
+
+
+These are ppredictions of maternal deaths utilizing the models of with and without offset by each individual fixed effect (Ethnicity, Age Group) as you can see there are vast differences between the plots with offset and without offfset. 
+
+
+```{r}
+install.packages("ggeffects")  # if not yet installed
+
+```
+
+Visually one can see without offset that the focus of the most maternal death counts go to white women who make up the majority of the population followed by black women. However with offset, the exposure is clear and there can be brought evidence of the unfortunate inflated maternal mortality rates of americanindian /alaskan native women and black women. 
+```{r}
+
+library(ggeffects)
+library(patchwork)
+
+#  predictions by ethnicity
+pred_eth1 <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
+plot(pred_eth1)  + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity ",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity"
+  )+
+  theme(plot.title = element_text(size =12 , face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+pred_eth <- ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
+plot(pred_eth) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity ",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity"
+  )+
+  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+
+
+```
+
+
+Without offset, the glmm model chose the population with the largest number of births amongst them 25-39 as having the greatest maternal mortality rate. However, the riskest pregnancies are to women who are over the age of 40 but do not give as much birth as younger ages. The glmm model with offset graph shows clearly the risk of women over 40 giving birth. 
+
+```{r}
+
+library(ggeffects)
+library(patchwork)
+
+pred_age1 <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
+plot(pred_age1) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ labs(
+    title="Predicted Maternal Deaths by Age Grou",
+      subtitle= "with offset", y="Maternal Deaths", x="Age Group"
+  )+
+  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
+plot(pred_age) +  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +labs(
+    title="Predicted Maternal Deaths by Age Group ",
+      subtitle= "without offset", y="Maternal Deaths", x="Age Group"
+  )+
+  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+```
+
+
+
+These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and age group. With the offset Glmm model the women at most risk for maternal mortality of black and American Indian and native Alaskan women over the age of 40, though the age range increased risk to all ethnicities. Without offset, the glmmmodel focuses on the age and ethnicity population that gives the most birth  such as 25-39 highest white women, followed by black, hispanic, and unknown, but american indian and alaskan native are seen with very low mortality rate because there is perhaps a less birthing population amongst the ethnicity
+
+
+```{r}
+library(ggeffects)
+library(patchwork)
+ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
+
+p1<-plot(ethnicityage_effect) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity and Age Group",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
+p2<-plot(ethnicityage_effect2) +theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title="Predicted Maternal Deaths by Ethnicity and Age Group",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+p1 + p2
+
+
+```
+
+These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Dobbs Era.  As shown before the non offset model favors white women and has limitatoins on view of mortality of american indian and alaskan women but similarly to the offset model, post dobbs has lower maternal mortality.  
+
+```{r}
+#AS you can see plottting without offset leads to faulty plots--no way to over look?
+library(ggeffects)
+library(patchwork)
+ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobbs_Era"))
+
+
+p1<-plot(ethnicitydobbs_effect) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ labs(
+    title="Predicted Maternal Deaths by Ethnicity and Dobbs Era",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Dobbs Era"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+ethnicitydobbs_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity",  "Dobbs_Era"))
+p2<-plot(ethnicitydobbs_effect2) +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title="Predicted Maternal Deaths by Ethnicity and Dobbs Era",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Dobbs Era"
+  )+
+  theme(plot.title = element_text(size = 8, face = "bold"), plot.subtitle = element_text(size = 8, face = "italic")) +theme(plot.subtitle = element_text(hjust = 0.5))
+  
+
+p1 + p2
+
+```
+
+This visualization  utilizes the offset model to predict maternal deaths over years by ethnicity with offset and shows the prediction of american indian and alaskan native women having the highest maternal mortality prediction followed by black women. In the non offset glmmmodel, Again white women are shown to have highest maternal mortality prediction followed by black women, with unknown and hispanic women having around same rates and lowest is the low ppopulation of american indian and alaskan native
+```{r}
+library(ggplot2)
+library(patchwork)
+
+# Predicted values for Year by Ethnicity
+year_eth <- ggpredict(all_glmmodel_nb, terms = c("Year", "Ethnicity"))
+
+# Plot
+p1<-plot(year_eth) +
+  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity",
+       x = "Year", y = "Predicted Maternal Deaths", subtitle = "with offset") + theme(plot.title = element_text(size = 9), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+
+# Predicted values for Year by Ethnicity
+year_eth2 <- ggpredict(allno_glmmodel_nb, terms = c("Year", "Ethnicity"))
+
+# Plot
+p2<-plot(year_eth2) +
+  labs(title = "Predicted Maternal Deaths Over Years by Ethnicity", subtitle= "without offset",
+       x = "Year", y = "Predicted Maternal Deaths") +theme(plot.title = element_text(size = 9), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+p1/p2
+```
+
+
+
+ We find that using an offset for maternal count data per live births provided a model that may not have been the highest performing but showed cleared indications of at risk groups such as american indian women, black women, and women over 40. The non offset model may have deceptively had higher performance numbers but regardless it still had black women as second place for maternal mortality. American Indian and Alaskan Natives have to fare with poorer health resources but are a smaller population unfortunately. Yet, there is strong evidence than Black women have been seen to face higher maternal mortality rates regardless of the use of offset or non offset method in glmmm modeling. 
+ 
+ 
 ### Conclusion
-
--   Summarize your key findings.
-WE did not find what we expected but the data is provisional. 
--   Discuss the implications of your results.
-
+ We had hoped that with Dobbs Era variable we could see if changes of maternal mortality occurred after the overturn of Roe v Wade. But unfortunately, we are working with provisional data and our exposure is nationwide. Future models could include states as a random effect or abortion access as a fixed effect. If so, abortion access could be a factor of 3 levels (extremely limited, somewhat limited, no limitations). It would be very interesting to see if including states and abortion access could give us a clearer picture of how maternal mortality is operating in general after the overturn of Roe v. Wade. 
+ Regardless, minorities such as American Indian women and Black women are at higher risk of maternal mortality and this has been a cultural known for some time now. Most American Indians and Alaskan Natives on reservations receive healthcare from Indian Health Services and the physicians, nurses, and other health care providers who work for IHS are shuffled from reservation to reservation on a periodic basis giving very little time for rapport to build unless a physician chooses to stay with one reservation. There can be apprehension from this population as well as black Americans in seeing their physicians as well as being heard by their physicians. In the case for those receiving IHS, there is not as much resources and certain rules are a bit in their health facilities. Free healthcare does not mean better.
+ Black women may struggle with being heard by their healthcare professionals and suffer birth complications that could have been mitigated if the professionals listened to their complaints. However, there could be more explanatory variables at play to explain why american Indian and Alaskan natives as well as Black women are facing higher maternal mortality. The higher maternal mortality for women over the age of 40 is to be expected as that is a high risk pregnancy and geriatric pregnancies start at age 35. However, perhaps age is only one part of the picture for women around the age of 40 have entered an age of increased stress to take care perhaps not only their own children but their parents as well, not t mention the additional health stresses that takes place as one ages. 
+Our results implies that american Indian women and black women are having higher mortality rates for reasons we can not be entirely clear of because we are not in the birthing room with the women when they give birth nor are we there for the immediate after birth to know of any complications these women could have faced. Furthermore, we are not present for the prenatal visits prior to birth and which behaviors or risks could have led to later maternal mortality. There are datasets that can follow women through their prenatal care and risks, however such data only later indicates if live births occur but not if the mother perishes.
+The inclusion of State as a random effect not only would help us see if maternal mortality as a whole could have been affected by differing abortion access but also see if there are differences amongst maternal mortality from different ethnicties (however not all states have american indian/native alaskan reservations or have diverse populations).
+Limitations of this study included the integrity of model  dependent on the inclusion of age group and ethnicity data that were actually not applicable but had to be denoted as "Unknown" for model to work. Additionally, the data is provisional and subject to change and is not final which may make our models not include finalized data and may make our model incorrect if the finalized data is vastly different than the data we are using currently.
 ## References

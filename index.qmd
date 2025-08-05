@@ -117,7 +117,7 @@ Since our data is longitudinal, a Negative Binomial GLMM is ideal since measurem
 
 ### Data Exploration and Visualization
 
-  The data we used come from the National Vital Statistics System, an organization that provides national data about births, deaths, marriages, divorces, and fetal deaths. It is a collaboration between the National Center for Health Statistics (NCHS) (a part of the CDC) and state vital records offices. {create citation https://www.cdc.gov/nchs/nvss/about_nvss.htm} This dataset is the Vital Statistics Rapid Release (VSRR) Provisional Maternal Death Counts and Rates, in the form of a .csv file. The dataset contains monthly death counts and death rates from 2019 to 2024 by race and ethnicity, age and overall. Rates are maternal deaths per 100,000 live births. For this dataset, a maternal death is defined as "the death of a woman while pregnant or within 42 days of termination of pregnancy irrespective of the duration and the site of the pregnancy, from any cause related to or aggravated by the pregnancy or its management, but not from accidental or incidental causes." {create citation https://www.cdc.gov/nchs/nvss/vsrr/provisional-maternal-deaths-rates.htm}. It is worth noting that this dataset is provisional, in that the data is updated quarterly as more data is received, and data from numbers from previous years is more reliable than numbers from recent years. The data was last updated April 6, 2025.
+  The data we used come from the National Vital Statistics System, an organization that provides national data about births, deaths, marriages, divorces, and fetal deaths. It is a collaboration between the National Center for Health Statistics (NCHS) (a part of the CDC) and state vital records offices. [@Centers for Disease Control and Prevention_2016] This dataset is the Vital Statistics Rapid Release (VSRR) Provisional Maternal Death Counts and Rates, in the form of a .csv file. The dataset contains monthly death counts and death rates from 2019 to 2024 by race and ethnicity, age and overall. Rates are maternal deaths per 100,000 live births. For this dataset, a maternal death is defined as "the death of a woman while pregnant or within 42 days of termination of pregnancy irrespective of the duration and the site of the pregnancy, from any cause related to or aggravated by the pregnancy or its management, but not from accidental or incidental causes." [@Centers for Disease Control and Prevention_2025]. It is worth noting that this dataset is provisional, in that the data is updated quarterly as more data is received, and data from numbers from previous years is more reliable than numbers from recent years. The data was last updated April 6, 2025.
 
 
 ```{r, warning=FALSE, echo=T, message=FALSE}
@@ -140,9 +140,9 @@ library(performance)
 ##Overdispersion is detected with Poisson model thus we must use negative binomial model
 if (!require("glmmTMB")) install.packages("glmmTMB")#if required to install
 library(glmmTMB)
-install.packages("ggeffects") 
+if (!require("ggeffects")) install.packages("ggeffects")
 library(ggeffects)
-install.packages("AICcmodavg")
+if (!require("AICcmodavg")) install.packages("AICcmodavg")
 library(AICcmodavg)
 ```
 
@@ -445,7 +445,7 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
   labs(
     title = "Maternal Mortality Rate Over Time by Ethnicity",
     x = "Year",
-    y = "Maternal Mortaity Rate (per 100,000 live births)"
+    y = "Maternal Mortalty Rate (per 100,000 live births)"
   ) +
   theme_minimal()
 ```
@@ -676,7 +676,7 @@ ggplot(df_re, aes(x = re_year)) +
 #The random effect of year is approximately normal with some mild deviations which is common with count model
  
 ```
-Our Chosen model Regression equation format 
+Our Chosen model Regression equation format:
 
 $$
 \begin{align*}
@@ -719,7 +719,7 @@ $$\log({E}[\text{Maternal Deaths}_i]) = -8.79 + 1.30\cdot\text{Black}_i + 0.27\c
 
 
 This is the offset model summary output:
-```{r}
+```{r,results='asis'}
 sjPlot::tab_model(all_glmmodel_nb,
           transform = NULL, 
           show.se = TRUE,         # show standard error
@@ -730,7 +730,7 @@ sjPlot::tab_model(all_glmmodel_nb,
 
 
 This is a model summary output with beta coefficients exponentiation into incidence rates ratios.
-```{r}
+```{r,results='asis'}
 library(sjPlot)
 tab_model(all_glmmodel_nb,
           title = " GLMM negative binomial model with offset")
@@ -888,7 +888,7 @@ library(patchwork)
 
 pred_age1 <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
 plot(pred_age1) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ labs(
-    title="Predicted Maternal Deaths by Age Grou",
+    title="Predicted Maternal Deaths by Age Group",
       subtitle= "with offset", y="Maternal Deaths", x="Age Group"
   )+
   theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
@@ -936,7 +936,7 @@ p1 + p2
   These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Dobbs Era.  As shown before the non offset model favors white women and has limitations on view of mortality of American Indian or Alaska Native women but similarly to the offset model, post-Dobbs has lower maternal mortality.  
 
 ```{r}
-#AS you can see plottting without offset leads to faulty plots--no way to over look?
+#As you can see plottting without offset leads to faulty plots--no way to over look?
 library(ggeffects)
 library(patchwork)
 ethnicitydobbs_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity", "Dobbs_Era"))
@@ -991,18 +991,18 @@ p1/p2
 
 
 
-  We find that using an offset for maternal count data per live births provided a model that may not have been the highest performing but showed cleared indications of at risk groups such as American Indian women, black women, and women over 40. The non offset model may have deceptively had higher performance numbers but regardless it still had black women as second place for maternal mortality. American Indian and Alaskan Natives have to fare with poorer health resources but are a smaller population unfortunately. Yet, there is strong evidence than Black women have been seen to face higher maternal mortality rates regardless of the use of offset or non offset method in glmmm modeling. 
+  We find that using an offset for maternal count data per live births provided a model that may not have been the highest performing but showed cleared indications of at risk groups such as American Indian women, black women, and women over 40. The non offset model may have deceptively had higher performance numbers but regardless it still had black women as second place for maternal mortality. American Indian and Alaskan Natives have to fare with poorer health resources but are a smaller population unfortunately. Yet, there is strong evidence than Black women have been seen to face higher maternal mortality rates regardless of the use of offset or non offset method in glmm modeling. 
  
  
 ### Conclusion
 
-  We had hoped that with Dobbs Era variable we could see if changes of maternal mortality occurred after the overturn of Roe v Wade. But unfortunately, we are working with provisional data and our exposure is nationwide. Future models could include states as a random effect or abortion access as a fixed effect. If so, abortion access could be a factor of 3 levels (extremely limited, somewhat limited, no limitations). It would be very interesting to see if including states and abortion access could give us a clearer picture of how maternal mortality is operating in general after the overturn of Roe v. Wade. 
+  We had hypothesized that with Dobbs Era variable we could see if changes of maternal mortality occurred after the overturn of Roe v Wade. But unfortunately, we are working with provisional data and our exposure is nationwide. Future models could include states as a random effect or abortion access as a fixed effect. If so, abortion access could be a factor of 3 levels (extremely limited, somewhat limited, no limitations). It would be very interesting to see if including states and abortion access could give us a clearer picture of how maternal mortality is operating in general after the overturn of Roe v. Wade. 
   
   Regardless, minorities such as American Indian women and Black women are at higher risk of maternal mortality and this has been a cultural known for some time now. Most American Indians and Alaskan Natives on reservations receive healthcare from Indian Health Services and the physicians, nurses, and other health care providers who work for IHS are shuffled from reservation to reservation on a periodic basis giving very little time for rapport to build unless a physician chooses to stay with one reservation. There can be apprehension from this population as well as black Americans in seeing their physicians as well as being heard by their physicians. In the case for those receiving IHS, there is not as much resources and certain rules are a bit in their health facilities. Free healthcare does not mean better.
   
-  Black women may struggle with being heard by their healthcare professionals and suffer birth complications that could have been mitigated if the professionals listened to their complaints. However, there could be more explanatory variables at play to explain why american Indian and Alaskan natives as well as Black women are facing higher maternal mortality. The higher maternal mortality for women over the age of 40 is to be expected as that is a high risk pregnancy and geriatric pregnancies start at age 35. However, perhaps age is only one part of the picture for women around the age of 40 have entered an age of increased stress to take care perhaps not only their own children but their parents as well, not t mention the additional health stresses that takes place as one ages. 
+  Black women may struggle with being heard by their healthcare professionals and suffer birth complications that could have been mitigated if the professionals listened to their complaints. However, there could be more explanatory variables at play to explain why American Indian and Alaskan natives as well as Black women are facing higher maternal mortality. The higher maternal mortality for women over the age of 40 is to be expected as that is a high risk pregnancy and geriatric pregnancies start at age 35. However, perhaps age is only one part of the picture for women around the age of 40 have entered an age of increased stress to take care perhaps not only their own children but their parents as well, not to mention the additional health stresses that takes place as one ages. 
   
-  Our results implies that american Indian women and black women are having higher mortality rates for reasons we can not be entirely clear of because we are not in the birthing room with the women when they give birth nor are we there for the immediate after birth to know of any complications these women could have faced. Furthermore, we are not present for the prenatal visits prior to birth and which behaviors or risks could have led to later maternal mortality. There are datasets that can follow women through their prenatal care and risks, however such data only later indicates if live births occur but not if the mother perishes.
+  Our results imply that American Indian women and black women are having higher mortality rates for reasons we can not be entirely clear of because we are not in the birthing room with the women when they give birth nor are we there for the immediate after birth to know of any complications these women could have faced. Furthermore, we are not present for the prenatal visits prior to birth and which behaviors or risks could have led to later maternal mortality. There are datasets that can follow women through their prenatal care and risks, however such data only later indicates if live births occur but not if the mother perishes.
 
   The inclusion of State as a random effect not only would help us see if maternal mortality as a whole could have been affected by differing abortion access but also see if there are differences among maternal mortality from different ethnicities (however not all states have American Indian or Alaska Native reservations or have diverse populations).
   

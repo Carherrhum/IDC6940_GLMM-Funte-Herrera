@@ -767,7 +767,7 @@ tab_model(all_glmmodel_nb,
  - Our low variability could be due to not having a random effect like state or other fixed effects to explain  variable like socioeconomic status, health care access, prenatal health etc.  
  - But even with low R2 the statistical significance of the fixed effects is still important because it highlights the significant relationship between the explanatory variables and maternal mortality. We are not so focused on prediction where a higher R2 would be more necessary for an adequate model
 
-TThis is brief glimpse at non offset glmm model table estimates: 
+This is brief glimpse at non offset glmm model table estimates: 
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb,
           transform = NULL, #original log and not exponiated

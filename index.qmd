@@ -537,12 +537,6 @@ check_overdispersion(poissonmodel_glmm_all)
 
 ```
 
-  We also ran models including or excluding the offset (log(Live_Births)) to see if there were be differences in AIC and estimates. AIC is the value in which we used to see how well a model performed. The best performing models were those with the fixed effects Ethnicity, Age Group, and Dobbs Era and random effect Year. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models, however did drop the Age Group Unknown factor from inclusion.
-  
-  The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7). However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
-
-
-Thus our visualizations will be based on the model with offset and all fixed effects.
 
 ```{r}
 ##with offset # all fixed effects
@@ -591,6 +585,20 @@ ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
 )
 summary(ethnicity_agegroupno_glmmodel_nb)
 ```
+
+```{r}
+
+
+MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
+
+```
+
+  We also ran models including or excluding the offset (log(Live_Births)) to see if there were be differences in AIC and estimates. AIC is the value in which we used to see how well a model performed. The best performing models were those with the fixed effects Ethnicity, Age Group, and Dobbs Era and random effect Year. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models, however did drop the Age Group Unknown factor from inclusion.
+  
+  The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7). However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
+
+
+Thus our visualizations will be based on the model with offset and all fixed effects.
 
 
 
@@ -756,9 +764,10 @@ tab_model(all_glmmodel_nb,
  - There was a 20% lower rate in maternal mortality after Dobbs was passed compared to prior the passing of Dobbs
  - The residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects
 5.5% of proportion of variance explained by fixed effects only, they only explain 5.5% of variance in maternal deaths conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
- - Our low variability could be due to not having a random effect like state or other fixed effects to explain  variable
+ - Our low variability could be due to not having a random effect like state or other fixed effects to explain  variable like socioeconomic status, health care access, prenatal health etc.  
+ - But even with low R2 the statistical significance of the fixed effects is still important because it highlights the significant relationship between the explanatory variables and maternal mortality. We are not so focused on prediction where a higher R2 would be more necessary for an adequate model
 
-TThis is brief glimpse at non offset glmm model table estimates: 
+This is brief glimpse at non offset glmm model table estimates: 
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb,
           transform = NULL, #original log and not exponiated

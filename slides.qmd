@@ -169,6 +169,12 @@ df_total_year <-deaths_df%>%
 
 - Another study uses GLMM to investigate the effect of particulate matter on child and maternal mortality globally
 
+## Application to Social Science {.smaller}
+
+- We are investigating the potential the dangers of a Post-Roe v. Wade world upon mothers, and the ongoing systematic issues that lay with women of color when giving birth.
+- We will be using that statistical method, Generalized linear mixed model(GLMM), to help analyze the potential risks that lay with mothers that give birth in the United States.
+- With our results we may hope to be better able to  identify the relationships between maternal mortality and explanatory variables such as age group, ethnicity, and the Dobbs era of which these deaths took place.
+- These findings are relevant because we could use them as evidence to help reduce maternal mortality amongst certain groups and potentially investigate if a postt-dobbs era could have resulted in a higher maternal mortality rate. 
 
 # Methods
 
@@ -238,7 +244,7 @@ The Variance of Negative binomial is given; $Var(Y)= {\mu}+ \left(\frac{\mu^2}{k
 
 # Data Exploration and Visualization
 
-## About the Dataset
+## About the Dataset {.smaller}
 
 - Vital Statistics Rapid Release (VSRR) Provisional Maternal Death Counts and Rates, in the form of a .csv
 
@@ -249,10 +255,9 @@ The Variance of Negative binomial is given; $Var(Y)= {\mu}+ \left(\frac{\mu^2}{k
 - Data from January 2019 to December 2024
 
 - Data is provisional and updated quarterly; becomes more reliable with more updates
+- Maternal Deaths between 1 and 9 are suppressed for privacy reasons
 
 ## Missing Data {.smaller}
-
-- Maternal Deaths between 1 and 9 are suppressed for privacy reasons
 
 - “Native Hawaiian or Other Pacific Islander, Non-Hispanic” has 70 NAs for Maternal Mortality, omitting this subgroup entirely
 
@@ -383,7 +388,7 @@ legend("topleft",
 
 ## Modeling
 
-- Created models with different fixed variables of Ethnicity, Age group, Dobbs Era, and the random effect variable year
+- Created models with different fixed variables of Ethnicity, Age group, Dobbs Era, and the random effect variable year, and the log of Live Births as offset
 - We first tested a Poisson model and found significant evidence of overdispersion (as expected) and hence used a GLMM with Negative Binomial family
 
 ## Models {.smaller}
@@ -399,6 +404,7 @@ models <- data.frame(
 kable(models)
 ```
 </div>
+
 ## Models
 
 ```{r,echo=FALSE}
@@ -411,9 +417,9 @@ all_glmmodel_nb <- glmmTMB(
 )
 summary(all_glmmodel_nb)
 ```
-## Models
 
-```{r,echo=FALSE}
+
+```{r,echo=FALSE,results="hide"}
 ethnicity_agegroup_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity+ Age_Group + (1|Year),
   offset=log(Live_Births),
@@ -421,10 +427,6 @@ ethnicity_agegroup_glmmodel_nb <- glmmTMB(
   data = deaths_df3
 )
 summary(ethnicity_agegroup_glmmodel_nb)
-```
-## Models
-
-```{r,echo=FALSE}
 ##with no offset # all fixed effects #with not offset we can just use maternal mortality rate per 100,0000 live_births
 allno_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity + Age_Group+ Dobbs_Era + (1 |Year),
@@ -432,20 +434,13 @@ allno_glmmodel_nb <- glmmTMB(
   data = deaths_df3
 )
 summary(allno_glmmodel_nb)
-```
-## Models
-
-```{r,echo=FALSE}
 ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity+ Age_Group + (1 |Year),
   family = nbinom2,
   data = deaths_df3
 )
 summary(ethnicity_agegroupno_glmmodel_nb)
-```
 ## Model Selection Table
-
-```{r,echo=FALSE}
 MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
 ```
 
@@ -469,10 +464,13 @@ $$
 + \log(\text{Live Births}_i)
 \end{align*}
 $$
-## Assumption Checking
+
+
+## Assumption Checking {.smaller}
 
 - Our chosen model adheres by all assumptions of GLMM
--The response variable and the predictors have a linear relationship within the levels of random effects.
+- The response variable and the predictors have a linear relationship within the levels of random effects.
+
 :::{.center}
 ```{r,echo=FALSE}
 #The response variable and the predictors have a linear relationship within the levels of random effect
@@ -494,6 +492,11 @@ lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
 ## Assumption Checking
 
 - The response variable is assumed to follow a negative binomial distribution, with $\sigma^2>\mu$.
+```{r,echo=FALSE}
+#check overdispersion for total data
+total_df %>% summarize(mean(Maternal_Deaths),
+var(Maternal_Deaths))
+```
 
 ## Assumption Checking
 
@@ -520,30 +523,10 @@ qqline(re_year, col = "red")##dots follow reference line that shows where points
 
 ```
 
-## Assumptions Checking
- 
-```{r,echo=FALSE}
-#Normality of Random effects
+## Assumptions Checking {.smaller}
 
-###According to this graph there is Normality of random effect because points fall close to red line of Q-Q plot. The histogram falls a somewhat nromal distribution. And the blue density of the random effect distribution lies mostly within the red dashed line of the distribution of ideal normal distribution with same means. The approximmately normal blue density of random effect year could be expected to have mild deviations since we are workking with count data
-
-#Points fall close to red line so random effects are approximately normal
-
-
-re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
-
-qqnorm(re_year, main = "Q-Q Plot of Random Effect of (Year)")
-qqline(re_year, col = "red")#points should roughly lie by this line if normal
-```
-## Assumptions Checking
-
-```{r,echo=FALSE}
-hist(re_year, main = "Histogram of Random Effects of model ", xlab = "Random effect (Year)")
-```
-
-## Assumptions Checking
-
-- The random effect of year is approximately normal with some mild deviations which is common with count model
+- The random effects are assumed to be normally distributed, with mean 0 and variance $\sigma$.
+- The random effect of year is approximately normal with some mild deviations which is common with count models.
 
 ```{r,echo=FALSE}
 #since most of blue density is within red line 
@@ -581,6 +564,15 @@ tab_model(all_glmmodel_nb,
 ```
 </div>
 
+## Model Characteristics (without offset model)
+
+<div class="scroll-box-vertical">
+```{r,echo=FALSE}
+sjPlot::tab_model(allno_glmmodel_nb,
+          title = "Fixed Effects from GLMM with offset(Incidence Rate Ratios)")
+```
+</div>
+
 ## Model Outcomes {.smaller}
 
 - Black women had a 267% higher rate of maternal mortality compared to reference group (Asian), holding all other groups constant
@@ -597,39 +589,33 @@ tab_model(all_glmmodel_nb,
 - Our low variability could be due to not having a random effect like state or other fixed effects to explain variable
 
 ## Model Outcomes - With and Without Offsets
-<br>
-<div class="flex-container-wide">
 
-<div class="flex-child">
-
-```{r}
+```{r,echo=FALSE}
 library(ggeffects)
 library(patchwork)
+ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
 
-#  predictions by ethnicity
-pred_eth1 <- ggpredict(all_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth1)  + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+p1<-plot(ethnicityage_effect) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
  labs(
-    title="Predicted Maternal Deaths by Ethnicity ",
-      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity"
+    title="Predicted Maternal Deaths by Ethnicity and Age Group",
+      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
   )+
-  theme(plot.title = element_text(size =12 , face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-```
-</div><div class="flex-child">
-```{r}
-pred_eth <- ggpredict(allno_glmmodel_nb, terms = "Ethnicity")
-plot(pred_eth) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
- labs(
-    title="Predicted Maternal Deaths by Ethnicity ",
-      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity"
-  )+
-  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-```
-</div></div>
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
 
+ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
+p2<-plot(ethnicityage_effect2) +theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title="Predicted Maternal Deaths by Ethnicity and Age Group",
+      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
+  )+
+  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
+
+p1 + p2
+```
 
 ## Model Outcomes
-<br>
+  
 ```{r}
 #AS you can see plottting without offset leads to faulty plots--no way to over look?
 library(ggeffects)
@@ -657,27 +643,23 @@ theme(axis.text.x = element_text(angle = 45, hjust = 1))+
 p1 + p2
 ```
 
-## Limitations
+## Limitations {.smaller}
 
 - The data used is provisional and updates quarterly with both new and old counts, so further analysis may offer differing results
 
 - The data offered counts by age group and ethnicity, but not both (i.e. maternal deaths for black women 40 and over). The inclusion of such data would give a better indication of the relationship between the two subgroups.
 
-- Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from 2020-2023. 
+- Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from 2020-2023.
 
-## Conclusions
+- More variables in the dataset would offer a better picture of the predictors of maternal mortality, specifically in regards to their relationship with ethnicity. Prenatal health, healthcare access, abortion access, and other prenatal behaviors would be useful.
+
+## Conclusions and Further Study {.smaller}
 
 - American Indian or Alaska Natives have the highest maternal mortality rate, despite having the smallest number of maternal deaths 
-
 - Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
-
-- Maternal deaths and maternal mortality rate increase from 2019 until February 2022, and then decreases 
-
 - Based on the provisional data there is no evidence that maternal mortality rate increased post-Dobbs
-
-## Further Study 
-
-- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality
+- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality and whether abortion access is a factor
 - A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
+- If this GLMM could be improved upon with new data then racial diparities in maternal mortality could be reduced by identifying significant explanatory variables
 
 ## References

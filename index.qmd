@@ -23,6 +23,33 @@ to edit)
 ## Introduction
 
 
+
+
+This presentation was created to investigate the potential the dangers of a Post- Roe world upon mothers but also the ongoing systematic issues that lay with women of color when giving birth. We will be using that statistical method, Generalized linear mixed model(GLMM), to help analyze the potential risks that lay with mothers that give birth throughout our country. With our results we may better potentially identify the relationships between maternal mortality and explanatory variables such as age group, ethnicity, and the dobbs era of which these births took place. These findings are relevant because we could use them as evidence to help reduce maternal mortality amongst certain groups and potentially investigate if a postt-dobbs era could have resulted in a higher maternal mortality rate. 
+
+We first processed our data provided by blah blah that is provisional maternal deaths. then we used exploratory data aanlaysis to explore our data a bit blah blah. We then ran models with fixed effects such as Ethnicity, Age Group, Dobbs Era and random Effect of years. With outr models we also tried to see if there was a using offset of live births was a significant extra method in our GLMM model to help with our outcome variable of maternal deaths be seen as maternal mortality rate. Then WE then utilized visualizations to better illustrate the disparities of maternal mortality taking place in our country. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   Generalized Linear Mixed Models (GLMMs) are a flexible class of statistical models that combine the features of two powerful tools: Generalized Linear Models (GLMs) and Mixed-Effects Models [@agresti2015foundations]. Like GLMs, GLMMs can model non-normal outcome variables, such as binary, count, or proportion data. However, they go a step further by incorporating random effects, which account for variation due to grouping or clustering in the data, correlated observations, and overdispersion. The GLMM method can work with complex data structures such as temporal correlation, spatial correlation , nested data, heterogeneity of variance, and repeated measurement [@zuur2009mixed].  
 
   In practical terms, GLMMs are especially useful when data points are not independent, such as when students are nested within schools, patients are treated within hospitals, or repeated measures are taken from the same subject over time. For example, Thall wrote that issues with longitudinal clinical trial basic count data from repeated measures taken from the same subject over time will have problems detecting comparable between subject outcomes because it can be difficult to determine if outcomes are time dependent or due to treatment groups, thus a general linear mixed model method may be utilized to represent dependence upon each patient, incorporate covariate data, create time as a function, account for variability between patients,and  be flexible and tractable [@thall1988mixed]. The random effects help model the correlation within clusters and allow for unobserved heterogeneity—differences that are not captured by the measured covariates.

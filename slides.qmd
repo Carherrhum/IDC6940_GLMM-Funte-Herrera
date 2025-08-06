@@ -174,7 +174,7 @@ df_total_year <-deaths_df%>%
 - We are investigating the potential the dangers of a Post-Roe v. Wade world upon mothers, and the ongoing systematic issues that lay with women of color when giving birth.
 - We will be using that statistical method, Generalized linear mixed model(GLMM), to help analyze the potential risks that lay with mothers that give birth in the United States.
 - With our results we may hope to be better able to  identify the relationships between maternal mortality and explanatory variables such as age group, ethnicity, and the Dobbs era of which these deaths took place.
-- These findings are relevant because we could use them as evidence to help reduce maternal mortality amongst certain groups and potentially investigate if a postt-dobbs era could have resulted in a higher maternal mortality rate. 
+- These findings are relevant because we could use them as evidence to help reduce maternal mortality amongst certain groups and potentially investigate if a post-Dobbs era could have resulted in a higher maternal mortality rate. 
 
 # Methods
 
@@ -182,7 +182,7 @@ df_total_year <-deaths_df%>%
 
 - GLMMs can be considered an extension of GLMs, wherein a GLM includes the addition of random effects, or an extension of Linear Mixed Models (LMMs), where a linear model with fixed and random effects is extended for non-normal distributions [@salinas2023generalized]. 
 
----
+## Math Background {.smaller}
 
 Let
 
@@ -201,17 +201,17 @@ Let
 Then the general equation for the model is given by:
 
 $$\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}{u}+\boldsymbol{\epsilon}$$
----
 
-The GLMM Model process is that the analyis of variance model or the equation is a vector of linear predictors with  of unknown parameters estimates. Each distribution has is its own probability function which we will utilize the Negative Binomial as GLMMs typically include a link function that relates the response variable $\mathbf{y}$ to a linear predictor, $\eta$, which excludes the residuals. So then
+## Math Background {.smaller}
+
+GLMMs typically include a link function that relates the response variable $\mathbf{y}$ to a linear predictor, $\eta$, which excludes the residuals. So then
 $$\boldsymbol{\eta}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\lambda}$$
----
 
 The link function is $g(\cdot)$, where
 $$g(E(\mathbf{y}))=\boldsymbol{\eta}$$
 where $E(\mathbf{y})$ is the expectation of $\mathbf{y}$. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for overdispered count data, so we will use a log link function.  
 $$g(\cdot)=log_e(\cdot)$$
----
+
 
 ## Negative Binomial Distribution {.smaller}
 
@@ -659,7 +659,7 @@ p1 + p2
 - Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
 - Based on the provisional data there is no evidence that maternal mortality rate increased post-Dobbs
 - A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality and whether abortion access is a factor
+- If this GLMM could be improved upon with new data then racial disparities in maternal mortality could be reduced by identifying significant explanatory variables
 - A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
-- If this GLMM could be improved upon with new data then racial diparities in maternal mortality could be reduced by identifying significant explanatory variables
 
 ## References

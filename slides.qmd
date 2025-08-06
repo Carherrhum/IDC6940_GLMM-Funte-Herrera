@@ -373,6 +373,19 @@ legend("topleft",
 
 # Modeling and Results
 
+## Data Preprocessing
+
+- Renamed column names
+- Filtered out maternal deaths less than zero and live births less than 100
+- Removed maternal death NA values
+- Variables ethnicity and age group mutated from variables Group and Subgroup
+- Created a binary variable called Dobbs_Era with values "Pre-Dobbs" and "Post-Dobbs" based on the overturning of Roe V. Wade with a value cut-off of June 4, 2022 
+
+## Modeling
+
+- Created models with different fixed variables of Ethnicity, Age group, Dobbs Era, and the random effect variable year
+- We first tested a Poisson model and found significant evidence of overdispersion (as expected) and hence used a GLMM with Negative Binomial family
+
 ## Models {.smaller}
 
 <div class="scroll-box-horizontal">
@@ -643,17 +656,8 @@ theme(axis.text.x = element_text(angle = 45, hjust = 1))+
 
 p1 + p2
 ```
-## Conclusion
 
-- American Indian or Alaska Natives have the highest maternal mortality rate, despite having the smallest number of maternal deaths 
-
-- Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
-
-- Maternal deaths and maternal mortality rate increase from 2019 until February 2022, and then decreases 
-
-- Based on the provisional data maternal mortality rate did not seem in increase post-Dobbs
-
-## Limitations and Further Study {.smaller}
+## Limitations
 
 - The data used is provisional and updates quarterly with both new and old counts, so further analysis may offer differing results
 
@@ -661,6 +665,19 @@ p1 + p2
 
 - Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from 2020-2023. 
 
-- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality.
+## Conclusions
+
+- American Indian or Alaska Natives have the highest maternal mortality rate, despite having the smallest number of maternal deaths 
+
+- Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
+
+- Maternal deaths and maternal mortality rate increase from 2019 until February 2022, and then decreases 
+
+- Based on the provisional data there is no evidence that maternal mortality rate increased post-Dobbs
+
+## Further Study 
+
+- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality
+- A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
 
 ## References

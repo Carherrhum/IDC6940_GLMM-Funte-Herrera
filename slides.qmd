@@ -203,23 +203,17 @@ $$\boldsymbol{\eta}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\lambda}$
 
 The link function is $g(\cdot)$, where
 $$g(E(\mathbf{y}))=\boldsymbol{\eta}$$
-where $E(\mathbf{y})$ is the expectation of \mathbf{y}. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for overdispered count data, so we will use a log link function.  
+where $E(\mathbf{y})$ is the expectation of $\mathbf{y}$. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for overdispered count data, so we will use a log link function.  
 $$g(\cdot)=log_e(\cdot)$$
 ---
 
-In the GLMM model the  parameter estimates is solved by reducing the negative log likelihood functions [@salinas2023generalized]. The means or the least square means are derivative of the parameter estimates and are found on the model scale. The link function, negative binomial log link, will convert the mean estimates at the model scale to the data scale.
-Negative Binomial Distribution:
+## Negative Binomial Distribution {.smaller}
+
 $$
 f(y;k,{\mu})=\frac{\Gamma(y+k)}{\Gamma(k)*(y+1)}\left(\frac{k}{\mu+k}\right)^{k}\left(1-\frac{k}{\mu+k}\right)^{y}
 $$
----
-
- Zuur writes that the Negative Binomial Distribution has two parameters ${\mu}$ and $k$ [@zuur2009mixed].
-The symbol ${\Gamma}$ is defined as ${\Gamma(y+1)=(y+1)!}$
 The Mean of Negative Binomial is given: $E(Y)= {\mu}$
 The Variance of Negative binomial is given; $Var(Y)= {\mu}+ \left(\frac{\mu^2}{k}\right)$, where second term determines the overdispersion, $k$ is called the dispersion parameter and indirectly determines overdispersion. If $k$ is significantly large relative to ${\mu^2}$ then the second term will approximate to zero and a Poisson distribution may as well be used. However, the smaller the $k$ value the larger the overdispersion may form and then negative binomial is the correct log link to utilize. 
-
----
 
 ## Assumptions
 
@@ -349,9 +343,48 @@ total_df <- deaths_df%>%
 plot_histogram(total_df$Maternal_Deaths,title='Histogram of Maternal Deaths - Total')
 ```
 
+## Exploratory Data Analysis
 
+```{r,echo+FALSE}
+ageu25 <- deaths_df%>%
+  filter(Subgroup=='Under 25 years')%>%
+  select(Maternal_Deaths)%>%
+  rename('Under_25_years'=Maternal_Deaths)
+age25 <- filtered_df%>%
+  filter(Subgroup=='25-39 years')%>%
+  select(Maternal_Deaths)%>%
+  rename('25-39_years' = Maternal_Deaths)
+ageo40 <- filtered_df%>%
+  filter(Subgroup=='40 years and over')%>%
+  select(Maternal_Deaths)%>%
+  rename('40_years_and_over'=Maternal_Deaths)
+age_ts <- bind_cols(ageu25,age25,ageo40) 
+age_ts <- ts(age_ts, start=c(2019,1), frequency = 12)
+colors=c('red','blue','green')
+plot.ts(age_ts, plot.type='single',main='Monthly Maternal Deaths by Age Group 2019-2024', ylab='Maternal Deaths',xlab='Time',col=colors)
+legend("topleft",                     
+       legend = c("Under 25 Years", "25-39 Years", "40 Years and over"),  # Labels
+       col = colors,                   
+       lty = 1,                        
+       lwd = 2,                     
+       bty = "n",
+       cex = 0.8) 
+```
 
 # Modeling and Results
+
+## Data Preprocessing
+
+- Renamed column names
+- Filtered out maternal deaths less than zero and live births less than 100
+- Removed maternal death NA values
+- Variables ethnicity and age group mutated from variables Group and Subgroup
+- Created a binary variable called Dobbs_Era with values "Pre-Dobbs" and "Post-Dobbs" based on the overturning of Roe V. Wade with a value cut-off of June 4, 2022 
+
+## Modeling
+
+- Created models with different fixed variables of Ethnicity, Age group, Dobbs Era, and the random effect variable year
+- We first tested a Poisson model and found significant evidence of overdispersion (as expected) and hence used a GLMM with Negative Binomial family
 
 ## Models {.smaller}
 
@@ -436,6 +469,94 @@ $$
 + \log(\text{Live Births}_i)
 \end{align*}
 $$
+## Assumption Checking
+
+- Our chosen model adheres by all assumptions of GLMM
+-The response variable and the predictors have a linear relationship within the levels of random effects.
+:::{.center}
+```{r,echo=FALSE}
+#The response variable and the predictors have a linear relationship within the levels of random effect
+# Base partial residuals (approximate)
+#Additionally a blue Loess lines is approximately close to this red reference line of 0 which helps evidence of linear relationship
+#there are no atterns with scatter plot
+resid_vals<-resid(all_glmmodel_nb,type = "pearson")
+fitted_vals <- predict(all_glmmodel_nb,type = "response")
+
+x <- jitter(fitted_vals)
+y<-resid_vals
+
+plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
+abline(h = 0, col = "red")#where residuals equal zero
+lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
+```
+:::
+
+## Assumption Checking
+
+- The response variable is assumed to follow a negative binomial distribution, with $\sigma^2>\mu$.
+
+## Assumption Checking
+
+- The residuals and random effects are independent.
+
+```{r,echo=FALSE}
+
+### The Independence of residual and Random Effects assumption is met because the dots of the residuals of the random effect (year) falls on the red refence line of  quantiles of random intercept estimates vesus quantiles of normal distribution. A
+#  Independence of Residuals and Random Effects
+#random effects of year
+#residuals leftover variation after accounting for fixed and random effects
+#random effects show between group variation (how each group's slope or intercet differs)
+#if are independent then model is correctly partitioning information
+#residuals capture individual level random noise not explained by model and if
+#there is no tie between residuals or random effects it upholds key assumption 
+#that the random effects and residuals are independent of each other
+re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
+
+
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
+qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
+
+
+
+```
+
+## Assumptions Checking
+ 
+```{r,echo=FALSE}
+#Normality of Random effects
+
+###According to this graph there is Normality of random effect because points fall close to red line of Q-Q plot. The histogram falls a somewhat nromal distribution. And the blue density of the random effect distribution lies mostly within the red dashed line of the distribution of ideal normal distribution with same means. The approximmately normal blue density of random effect year could be expected to have mild deviations since we are workking with count data
+
+#Points fall close to red line so random effects are approximately normal
+
+
+re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
+
+qqnorm(re_year, main = "Q-Q Plot of Random Effect of (Year)")
+qqline(re_year, col = "red")#points should roughly lie by this line if normal
+```
+## Assumptions Checking
+
+```{r,echo=FALSE}
+hist(re_year, main = "Histogram of Random Effects of model ", xlab = "Random effect (Year)")
+```
+
+## Assumptions Checking
+
+- The random effect of year is approximately normal with some mild deviations which is common with count model
+
+```{r,echo=FALSE}
+#since most of blue density is within red line 
+#The random effect of year is approximately normal with some mild deviations which is common with count model
+ 
+df_re <- data.frame(re = re_year)
+
+ggplot(df_re, aes(x = re_year)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
+  stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
+                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
+  ggtitle("Density of Random Effect (Year) model  with Normal Curve")
+```
 
 ## Model Characteristics
 
@@ -465,31 +586,15 @@ tab_model(all_glmmodel_nb,
 - Black women had a 267% higher rate of maternal mortality compared to reference group (Asian), holding all other groups constant
 - White women have a  31% higher rate of maternal mortality compared to reference group (Asian) holding all other groups constant
 - Hispanic women have a 15% higher rate of maternal mortality compared to reference group (Asian), holding all other groups constant
+- Unknown Ethnicity was not statistically significant
 - Women 25-39 have a 37% higher rate of maternal mortality compared to reference group(Under 25) holding all other groups constant
 - Women 40 years and older have a 505% higher  rate of maternal mortality compared to reference group (under 25), holding all other groups constant 
+
+## Model Outcomes {.smaller}
+
 - There was a 20% lower rate in maternal mortality after Dobbs was passed compared to prior the passing of Dobbs
-
-## Assumptions
-
-- Our chosen model adheres by all assumptions of GLMM
-
-:::{.center}
-```{r,echo=FALSE}
-#The response variable and the predictors have a linear relationship within the levels of random effect
-# Base partial residuals (approximate)
-#Additionally a blue Loess lines is approximately close to this red reference line of 0 which helps evidence of linear relationship
-#there are no atterns with scatter plot
-resid_vals<-resid(all_glmmodel_nb,type = "pearson")
-fitted_vals <- predict(all_glmmodel_nb,type = "response")
-
-x <- jitter(fitted_vals)
-y<-resid_vals
-
-plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
-abline(h = 0, col = "red")#where residuals equal zero
-lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
-```
-:::
+- The residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects 5.5% of proportion of variance explained by fixed effects only, they only explain 5.5% of variance in maternal deaths conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
+- Our low variability could be due to not having a random effect like state or other fixed effects to explain variable
 
 ## Model Outcomes - With and Without Offsets
 <br>
@@ -551,17 +656,8 @@ theme(axis.text.x = element_text(angle = 45, hjust = 1))+
 
 p1 + p2
 ```
-## Conclusion
 
-- American Indian or Alaska Natives have the highest maternal mortality rate, despite having the smallest number of maternal deaths 
-
-- Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
-
-- Maternal deaths and maternal mortality rate increase from 2019 until February 2022, and then decreases 
-
-- Based on the provisional data maternal mortality rate did not seem in increase post-Dobbs
-
-## Limitations and Further Study {.smaller}
+## Limitations
 
 - The data used is provisional and updates quarterly with both new and old counts, so further analysis may offer differing results
 
@@ -569,6 +665,19 @@ p1 + p2
 
 - Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from 2020-2023. 
 
-- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality.
+## Conclusions
+
+- American Indian or Alaska Natives have the highest maternal mortality rate, despite having the smallest number of maternal deaths 
+
+- Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
+
+- Maternal deaths and maternal mortality rate increase from 2019 until February 2022, and then decreases 
+
+- Based on the provisional data there is no evidence that maternal mortality rate increased post-Dobbs
+
+## Further Study 
+
+- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality
+- A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
 
 ## References

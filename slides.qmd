@@ -659,7 +659,7 @@ p1 + p2
 - Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
 - Based on the provisional data there is no evidence that maternal mortality rate increased post-Dobbs
 - A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality and whether abortion access is a factor
-- A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
 - If this GLMM could be improved upon with new data then racial diparities in maternal mortality could be reduced by identifying significant explanatory variables
+- A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
 
 ## References

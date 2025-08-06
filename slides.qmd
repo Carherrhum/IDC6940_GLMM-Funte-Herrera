@@ -155,19 +155,9 @@ df_total_year <-deaths_df%>%
    -  Proportions or rates [@salinas2023generalized]
 
 
--  Improving inference by accounting for both fixed effects (predictors of interest) and random effects (random variation across groups)
 
 
--  Reducing bias and inflated Type I error rates that can result from ignoring data structure [@thompson2022cluster]
 
-
-## Past Research Utilizing GLMM
-
-- Frequently used in fields like medicine, ecology, education, and social sciences
-
-- One study explores the benefits of a zero-inflated Poisson GLMM (to handle count data has an overabundance of zeroes) applied to maternal mortality data in Ghana [@tawiah2020zero]
-
-- Another study uses GLMM to investigate the effect of particulate matter on child and maternal mortality globally
 
 ## Application to Social Science {.smaller}
 
@@ -212,14 +202,6 @@ $$g(E(\mathbf{y}))=\boldsymbol{\eta}$$
 where $E(\mathbf{y})$ is the expectation of $\mathbf{y}$. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for overdispered count data, so we will use a log link function.  
 $$g(\cdot)=log_e(\cdot)$$
 
-
-## Negative Binomial Distribution {.smaller}
-
-$$
-f(y;k,{\mu})=\frac{\Gamma(y+k)}{\Gamma(k)*(y+1)}\left(\frac{k}{\mu+k}\right)^{k}\left(1-\frac{k}{\mu+k}\right)^{y}
-$$
-The Mean of Negative Binomial is given: $E(Y)= {\mu}$
-The Variance of Negative binomial is given; $Var(Y)= {\mu}+ \left(\frac{\mu^2}{k}\right)$, where second term determines the overdispersion, $k$ is called the dispersion parameter and indirectly determines overdispersion. If $k$ is significantly large relative to ${\mu^2}$ then the second term will approximate to zero and a Poisson distribution may as well be used. However, the smaller the $k$ value the larger the overdispersion may form and then negative binomial is the correct log link to utilize. 
 
 ## Assumptions
 
@@ -440,6 +422,11 @@ ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
   data = deaths_df3
 )
 summary(ethnicity_agegroupno_glmmodel_nb)
+```
+
+## Model Choice 
+
+```{r,echo=FALSE}
 ## Model Selection Table
 MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
 ```
@@ -541,16 +528,13 @@ ggplot(df_re, aes(x = re_year)) +
   ggtitle("Density of Random Effect (Year) model  with Normal Curve")
 ```
 
-## Model Characteristics
+
+## Model Characteristics (without offset model)
 
 <div class="scroll-box-vertical">
-```{r,echo=FALSE,results='asis'}
-sjPlot::tab_model(all_glmmodel_nb,
-          transform = NULL, 
-          show.se = TRUE,         # show standard error
-          show.stat = TRUE,       # show z-values
-          show.p = TRUE,           
-          title = "GLMM negative binomial model with offset (Log Estimates)")
+```{r,echo=FALSE}
+sjPlot::tab_model(allno_glmmodel_nb,
+          title = "Fixed Effects from GLMM without offset(Incidence Rate Ratios)")
 ```
 </div>
 
@@ -564,14 +548,6 @@ tab_model(all_glmmodel_nb,
 ```
 </div>
 
-## Model Characteristics (without offset model)
-
-<div class="scroll-box-vertical">
-```{r,echo=FALSE}
-sjPlot::tab_model(allno_glmmodel_nb,
-          title = "Fixed Effects from GLMM without offset(Incidence Rate Ratios)")
-```
-</div>
 
 ## Model Outcomes {.smaller}
 
@@ -588,31 +564,6 @@ sjPlot::tab_model(allno_glmmodel_nb,
 - The residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects 5.5% of proportion of variance explained by fixed effects only, they only explain 5.5% of variance in maternal deaths conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
 - Our low variability could be due to not having a random effect like state or other fixed effects to explain variable
 
-## Model Outcomes - With and Without Offsets
-
-```{r,echo=FALSE}
-library(ggeffects)
-library(patchwork)
-ethnicityage_effect <- ggpredict(all_glmmodel_nb, terms = c("Ethnicity","Age_Group"))
-
-p1<-plot(ethnicityage_effect) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
- labs(
-    title="Predicted Maternal Deaths by Ethnicity and Age Group",
-      subtitle= "with offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
-  )+
-  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-ethnicityage_effect2<-ggpredict(allno_glmmodel_nb, terms = c("Ethnicity", "Age_Group"))
-p2<-plot(ethnicityage_effect2) +theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(
-    title="Predicted Maternal Deaths by Ethnicity and Age Group",
-      subtitle= "without offset", y="Maternal Deaths", x="Ethnicity", color = "Age Group"
-  )+
-  theme(plot.title = element_text(size = 8, face= "bold"), plot.subtitle = element_text(size = 8, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-p1 + p2
-```
 
 ## Model Outcomes
   

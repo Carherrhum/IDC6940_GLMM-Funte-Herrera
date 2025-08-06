@@ -182,7 +182,7 @@ df_total_year <-deaths_df%>%
 
 - GLMMs can be considered an extension of GLMs, wherein a GLM includes the addition of random effects, or an extension of Linear Mixed Models (LMMs), where a linear model with fixed and random effects is extended for non-normal distributions [@salinas2023generalized]. 
 
----
+## Math Background {.smaller}
 
 Let
 
@@ -201,17 +201,17 @@ Let
 Then the general equation for the model is given by:
 
 $$\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}{u}+\boldsymbol{\epsilon}$$
----
 
-The GLMM Model process is that the analyis of variance model or the equation is a vector of linear predictors with  of unknown parameters estimates. Each distribution has is its own probability function which we will utilize the Negative Binomial as GLMMs typically include a link function that relates the response variable $\mathbf{y}$ to a linear predictor, $\eta$, which excludes the residuals. So then
+## Math Background {.smaller}
+
+GLMMs typically include a link function that relates the response variable $\mathbf{y}$ to a linear predictor, $\eta$, which excludes the residuals. So then
 $$\boldsymbol{\eta}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\lambda}$$
----
 
 The link function is $g(\cdot)$, where
 $$g(E(\mathbf{y}))=\boldsymbol{\eta}$$
 where $E(\mathbf{y})$ is the expectation of $\mathbf{y}$. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for overdispered count data, so we will use a log link function.  
 $$g(\cdot)=log_e(\cdot)$$
----
+
 
 ## Negative Binomial Distribution {.smaller}
 

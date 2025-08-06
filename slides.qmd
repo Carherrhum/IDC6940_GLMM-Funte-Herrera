@@ -169,6 +169,12 @@ df_total_year <-deaths_df%>%
 
 - Another study uses GLMM to investigate the effect of particulate matter on child and maternal mortality globally
 
+## Application to Social Science {.smaller}
+
+- We are investigating the potential the dangers of a Post-Roe v. Wade world upon mothers, and the ongoing systematic issues that lay with women of color when giving birth.
+- We will be using that statistical method, Generalized linear mixed model(GLMM), to help analyze the potential risks that lay with mothers that give birth in the United States.
+- With our results we may hope to be better able to  identify the relationships between maternal mortality and explanatory variables such as age group, ethnicity, and the Dobbs era of which these deaths took place.
+- These findings are relevant because we could use them as evidence to help reduce maternal mortality amongst certain groups and potentially investigate if a postt-dobbs era could have resulted in a higher maternal mortality rate. 
 
 # Methods
 
@@ -383,7 +389,7 @@ legend("topleft",
 
 ## Modeling
 
-- Created models with different fixed variables of Ethnicity, Age group, Dobbs Era, and the random effect variable year
+- Created models with different fixed variables of Ethnicity, Age group, Dobbs Era, and the random effect variable year, and the log of Live Births as offset
 - We first tested a Poisson model and found significant evidence of overdispersion (as expected) and hence used a GLMM with Negative Binomial family
 
 ## Models {.smaller}
@@ -663,21 +669,17 @@ p1 + p2
 
 - The data offered counts by age group and ethnicity, but not both (i.e. maternal deaths for black women 40 and over). The inclusion of such data would give a better indication of the relationship between the two subgroups.
 
-- Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from 2020-2023. 
+- Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from 2020-2023.
 
-## Conclusions
+- More variables in the dataset would offer a better picture of the predictors of maternal mortality, specifically in regards to their relationship with ethnicity. Prenatal health, healthcare access, abortion access, and other prenatal behaviors would be useful.
+
+## Conclusions and Further Study {.smaller}
 
 - American Indian or Alaska Natives have the highest maternal mortality rate, despite having the smallest number of maternal deaths 
-
 - Black women had the second highest maternal mortality rate, and the second highest total maternal deaths
-
-- Maternal deaths and maternal mortality rate increase from 2019 until February 2022, and then decreases 
-
 - Based on the provisional data there is no evidence that maternal mortality rate increased post-Dobbs
-
-## Further Study 
-
-- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality
+- A study utilizing state specific data (due to differing laws regarding abortion) might give a clearer indication of the impact of Dobbs on maternal mortality and whether abortion access is a factor
 - A study investigating healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022
+- If this GLMM could be improved upon with new data then racial diparities in maternal mortality could be reduced by identifying significant explanatory variables
 
 ## References

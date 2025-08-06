@@ -806,16 +806,16 @@ sjPlot::tab_model(allno_glmmodel_nb,
 
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb,
-          title = "Fixed Effects from GLMM with outset(Incidence Rates Ratios)")
+          title = "Fixed Effects from GLMM without outset(Incidence Rates Ratios)")
 
 #residual variance is 0.01, variance in maternal deaths not explained by fixed effects or random effects
 #variance for random intercept of group year is 0.03
 #ICC- intraclass correlation-0.71 of the proportion of the total variance explained by year, which is nothing year contributes nothing to explaining variation in maternal deaths it happens within years not between them--SUSPPICiOUSLY HIGH
-##97.1% of proportion of variance explained  by fixed effects only, they only explain 5.5% of variance in maternal deaths sad
+##97.1% of proportion of variance explained  by fixed effects only
 ## conditional 99.2% is the proportion of variance contributed by fixed and random effectsToo good to be true
 ```
 
-  We will not be naming the incidence rates ratios for this not offset model since they are insanely inflated for example white women have a 98.8% higher rate of mortality than asian reference group and the age group 40 years and older is not statistically significant in this model but unknown ethnicity is found to be statistically significant.
+  We will not be naming the incidence rates ratios for this not offset model since they are insanely inflated for example white women have a 988.8% higher rate of mortality than asian reference group and the age group 40 years and older is not statistically significant in this model but unknown ethnicity is found to be statistically significant.
 Additionally, ICC- intra-class correlation-0.71 of the proportion of the total variance explained by year is suspiciously high.
 
   What is also too good to be true is the 97.1% of proportion of variance explained by fixed effects only,
@@ -917,26 +917,7 @@ plot(pred_eth) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+
 
   Without offset, the glmm model chose the population with the largest number of births amongst them 25-39 as having the greatest maternal mortality rate. However, the riskiest pregnancies are to women who are over the age of 40 but do not give as much birth as younger ages. The glmm model with offset graph shows clearly the risk of women over 40 giving birth. 
 
-```{r}
 
-library(ggeffects)
-library(patchwork)
-
-pred_age1 <- ggpredict(all_glmmodel_nb, terms = "Age_Group")
-plot(pred_age1) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ labs(
-    title="Predicted Maternal Deaths by Age Group",
-      subtitle= "with offset", y="Maternal Deaths", x="Age Group"
-  )+
-  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-pred_age <- ggpredict(allno_glmmodel_nb, terms = "Age_Group")
-plot(pred_age) +  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +labs(
-    title="Predicted Maternal Deaths by Age Group ",
-      subtitle= "without offset", y="Maternal Deaths", x="Age Group"
-  )+
-  theme(plot.title = element_text(size = 12, face= "bold"), plot.subtitle = element_text(size = 10, face = "italic"))+ theme(plot.subtitle = element_text(hjust = 0.5))
-
-```
 
 
 

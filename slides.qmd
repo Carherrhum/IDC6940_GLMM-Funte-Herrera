@@ -569,7 +569,7 @@ tab_model(all_glmmodel_nb,
 <div class="scroll-box-vertical">
 ```{r,echo=FALSE}
 sjPlot::tab_model(allno_glmmodel_nb,
-          title = "Fixed Effects from GLMM with offset(Incidence Rate Ratios)")
+          title = "Fixed Effects from GLMM without offset(Incidence Rate Ratios)")
 ```
 </div>
 

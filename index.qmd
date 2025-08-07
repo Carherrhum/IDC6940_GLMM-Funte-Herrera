@@ -551,13 +551,31 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 
 #### Data Preprocessing
 
-  Our Data preprocessing started by renaming column names, filtering out data by only including observations that have maternal deaths above zero values and live births above 100 births so our future model has appropriate data to work and removed observations with NA values. Due to the nature of the Dataframe, the fixed variables of ethnicity and age group had to be mutated from the variables Group and Subgroup. The variable Group would have values such as, "Race and Hispanic origin"  or "Age" and the variable Subgroup would have the specific value applicable to the Group. For example, if the Group value was "Race and Hispanic origin", the Subgroup would have a value such as "'Hispanic", "Black, with no Hispanic Origin", "White, with no Hispanic origin", etc. If the variable Group was "Age", Subgroup values could be "25 and under", 25-39", "Or 40 years and over".  The variable, Ethnicity, was extracted from values from Subgroup when the variable Group had the value "Race and Hispanic Origin" and if that Group value  was not "Race and Hispanic Origin" the Ethnicity observation would be "NA". The variable Age Group was similarly created when the Group value "Age" is present and thus the Age Group value would be extracted from the Subgroup value and if the Group value is not "Age" then NA would be put as the value for Age Group. We made Year, Month, Ethnicity, and Age_Group into factor values.When conducting models Age_Group(unknown) were not estimable which caused  rank deficiency but for model integrity we could not remove that factor. 
-  
-  We created 2 data frames one for the ethnicity variable that would only have ethnicity values and removed any values in the subgroup that was not ethnicity and removed any values that were not applicable and additionally did the same for age group, afterwards we merged both dataframes. The final data frame we named all factor levels for Ethnicity and Age group and included a level for both called "Unknown" so that any non-applicable values would be replaced with the value "Unknown". The "Unknown" value was created so model building would execute when both Ethnicity and Age Group were placed as fixed values in a model. Finally, we created a variable called, Dobbs Era to denote whether the period was prior to the overturn of Roe v. Wade or after the overturn of Roe v. Wade. We created this variable to see if there would be any differences in maternal deaths based on that period. We created Dobbs Era by first creating a variable called Date that combines variables year, month, and the first day to make the variable date, and then the value "cutoff" of 2022-06-04 which is when Roe v. Wade was overturned. Pre-Dobbs value would be inputted if the date variable occurred before the cutoff otherwise the Post-Dobbs Value would be inputted. Dobbs Era is a factor fixed variable for the models we created. 
- 
+Our data preprocessing began with renaming columns for clarity and filtering the dataset to ensure the modeling process was based on relevant and reliable observations. Specifically, we retained only observations where maternal deaths were greater than zero and where live births exceeded 100, in order to reduce noise and improve model fit. Observations with missing (NA) values were also removed.
+
+Due to the structure of the dataset, the fixed-effect variables Ethnicity and Age Group had to be derived from the existing variables Group and Subgroup. The Group variable contained general categories, such as "Race and Hispanic origin" or "Age", while the Subgroup variable provided the specific values associated with each group. For example:
+
+- If Group was "Race and Hispanic origin", then Subgroup could be "Hispanic", "Black, not Hispanic", or "White, not Hispanic".
+
+- If Group was "Age", then Subgroup could be "25 and under", "25–39", or "40 and over".
+
+To create the Ethnicity variable, we extracted values from Subgroup when Group was "Race and Hispanic origin". In cases where Group was not "Race and Hispanic origin", the Ethnicity was set to "Unknown". Similarly, the Age Group variable was constructed from Subgroup when Group was "Age"; otherwise, it was also labeled "Unknown".
+
+We converted the following variables to factor type: Year, Month, Ethnicity, and Age_Group. During model fitting, we encountered rank deficiency issues due to the "Unknown" level in Age_Group (which made estimates for that level non-estimable). However, for the sake of preserving the full structure and interpretability of the model, we retained the "Unknown" category rather than removing it.
+
+To facilitate modeling, we created two intermediate data frames:
+
+- One retained only ethnicity-related observations.
+
+- The other retained only age group-related observations.
+
+After cleaning and filtering each subset, we merged them to create a unified dataset. We explicitly defined factor levels for both Ethnicity and Age_Group, including an "Unknown" level in each. This ensured that model execution would not fail when including both variables as fixed effects.
+
+Lastly, we created a new variable, Dobbs_Era, to distinguish between periods before and after the U.S. Supreme Court's overturning of Roe v. Wade on June 24, 2022. To do this, we first constructed a Date variable by combining Year, Month, and the first day of each month. We then used a cutoff date (2022-06-24) to classify each observation as "Pre-Dobbs" or "Post-Dobbs". This new factor variable was included as a fixed effect in the models to investigate whether the Dobbs decision had a measurable impact on maternal deaths.
+
 #### Modeling
 
-  We created models with different combinations of fixed variables of Ethnicity, Age Group, Dobbs Era and the random effect variable year. We first tested Poisson models and found that they all had significant evidence of overdispersion and thus a GLMM of negative binomial family was the best method for modeling this data. Parameters Age_GroupUnknown were not estimable" this is what's causing the rank deficiency.
+We created models with different combinations of fixed variables of Ethnicity, Age Group, Dobbs Era and the random effect variable year. We first tested Poisson models and found that they all had significant evidence of overdispersion and thus a GLMM of negative binomial family was the best method for modeling this data. Parameters Age_GroupUnknown were not estimable" this is what's causing the rank deficiency.
 ```{r}
 poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
                               offset=log(Live_Births),

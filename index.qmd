@@ -549,10 +549,14 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 
 ### Modeling and Results
 
+#### Data Preprocessing
+
   Our Data preprocessing started by renaming column names, filtering out data by only including observations that have maternal deaths above zero values and live births above 100 births so our future model has appropriate data to work and removed observations with NA values. Due to the nature of the Dataframe, the fixed variables of ethnicity and age group had to be mutated from the variables Group and Subgroup. The variable Group would have values such as, "Race and Hispanic origin"  or "Age" and the variable Subgroup would have the specific value applicable to the Group. For example, if the Group value was "Race and Hispanic origin", the Subgroup would have a value such as "'Hispanic", "Black, with no Hispanic Origin", "White, with no Hispanic origin", etc. If the variable Group was "Age", Subgroup values could be "25 and under", 25-39", "Or 40 years and over".  The variable, Ethnicity, was extracted from values from Subgroup when the variable Group had the value "Race and Hispanic Origin" and if that Group value  was not "Race and Hispanic Origin" the Ethnicity observation would be "NA". The variable Age Group was similarly created when the Group value "Age" is present and thus the Age Group value would be extracted from the Subgroup value and if the Group value is not "Age" then NA would be put as the value for Age Group. We made Year, Month, Ethnicity, and Age_Group into factor values.When conducting models Age_Group(unknown) were not estimable which caused  rank deficiency but for model integrity we could not remove that factor. 
   
   We created 2 data frames one for the ethnicity variable that would only have ethnicity values and removed any values in the subgroup that was not ethnicity and removed any values that were not applicable and additionally did the same for age group, afterwards we merged both dataframes. The final data frame we named all factor levels for Ethnicity and Age group and included a level for both called "Unknown" so that any non-applicable values would be replaced with the value "Unknown". The "Unknown" value was created so model building would execute when both Ethnicity and Age Group were placed as fixed values in a model. Finally, we created a variable called, Dobbs Era to denote whether the period was prior to the overturn of Roe v. Wade or after the overturn of Roe v. Wade. We created this variable to see if there would be any differences in maternal deaths based on that period. We created Dobbs Era by first creating a variable called Date that combines variables year, month, and the first day to make the variable date, and then the value "cutoff" of 2022-06-04 which is when Roe v. Wade was overturned. Pre-Dobbs value would be inputted if the date variable occurred before the cutoff otherwise the Post-Dobbs Value would be inputted. Dobbs Era is a factor fixed variable for the models we created. 
-  
+ 
+#### Modeling
+
   We created models with different combinations of fixed variables of Ethnicity, Age Group, Dobbs Era and the random effect variable year. We first tested Poisson models and found that they all had significant evidence of overdispersion and thus a GLMM of negative binomial family was the best method for modeling this data. Parameters Age_GroupUnknown were not estimable" this is what's causing the rank deficiency.
 ```{r}
 poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
@@ -632,8 +636,51 @@ MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_
 
 Thus our visualizations will be based on the model with offset and all fixed effects.
 
+Our Chosen model Regression equation format:
 
+$$
+\begin{align*}
+\log(\mathbb{E}[\text{Maternal Deaths}_i]) &= \beta_0 
++ \beta_1 \cdot \text{Black}_i 
++ \beta_2 \cdot \text{White}_i 
++ \beta_3 \cdot \text{Hispanic}_i \\
+&+ \beta_4 \cdot \text{American Indian or Alaska Native}_i 
++ \beta_5 \cdot \text{EthnicityUnknown}_i \\
+&+ \beta_6 \cdot \text{Age 25-39}_i 
++ \beta_7 \cdot \text{Age 40 Plus}_i 
++ \beta_8 \cdot \text{Post Dobbs}_i 
++ b_{\text{Year}[i]} \\
+&+ \log(\text{Live Births}_i)
+\end{align*}
+$$
 
+The non offset model format:
+
+$$
+\begin{align*}
+\log(\mathbb{E}[\text{Maternal Deaths}_i]) &= \beta_0 
++ \beta_1 \cdot \text{Black}_i 
++ \beta_2 \cdot \text{White}_i 
++ \beta_3 \cdot \text{Hispanic}_i \\
+&+ \beta_4 \cdot \text{American Indian or Alaska Native}_i 
++ \beta_5 \cdot \text{EthnicityUnknown}_i \\
+&+ \beta_6 \cdot \text{Age 25-39}_i 
++ \beta_7 \cdot \text{Age 40 Plus}_i 
++ \beta_8 \cdot \text{Post Dobbs}_i 
++ b_{\text{Year}[i]}
+\end{align*}
+$$
+
+Our beta estimate outputs in a equation model format for the offset model:
+
+$$
+\begin{align*}
+\log({E}[\text{Maternal Deaths}_i]) &= -8.79 + 1.30\cdot\text{Black}_i + 0.27\cdot\text{White}_i	+ 0.14\cdot\text{Hispanic}_i \\ &+ 1.42\cdot\text{American Indian or Alaska Native}_i 
++ 0.03\cdot\text{EthnicityUnknown}_i \\ &+ 0.39 \cdot\text{Age 25--39}_i + 1.80\cdot\text{Age 40 Plus}_i -0.23\cdot\text{Post Dobbs}_i \\ &+ b_{\text{Year}[i]} + \log(\text{Live Births}_i)
+\end{align*}
+$$
+
+#### Testing Assumptions
 
 Our chosen model adheres by all assumptions of GLMM 
 
@@ -720,47 +767,9 @@ ggplot(df_re, aes(x = re_year)) +
 #The random effect of year is approximately normal with some mild deviations which is common with count model
  
 ```
-Our Chosen model Regression equation format:
 
-$$
-\begin{align*}
-\log(\mathbb{E}[\text{Maternal Deaths}_i]) &= \beta_0 
-+ \beta_1 \cdot \text{Black}_i 
-+ \beta_2 \cdot \text{White}_i 
-+ \beta_3 \cdot \text{Hispanic}_i 
-+ \beta_4 \cdot \text{American Indian or Alaska Native}_i 
-+ \beta_5 \cdot \text{EthnicityUnknown}_i \\
-&+ \beta_6 \cdot \text{Age 25-39}_i 
-+ \beta_7 \cdot \text{Age 40 Plus}_i 
-+ \beta_8 \cdot \text{Post Dobbs}_i 
-+ b_{\text{Year}[i]}
-+ \log(\text{Live Births}_i)
-\end{align*}
-$$
 
-The non offset model format:
-
-$$
-\begin{align*}
-\log(\mathbb{E}[\text{Maternal Deaths}_i]) &= \beta_0 
-+ \beta_1 \cdot \text{Black}_i 
-+ \beta_2 \cdot \text{White}_i 
-+ \beta_3 \cdot \text{Hispanic}_i 
-+ \beta_4 \cdot \text{American Indian or Alaska Native}_i 
-+ \beta_5 \cdot \text{EthnicityUnknown}_i \\
-&+ \beta_6 \cdot \text{Age 25-39}_i 
-+ \beta_7 \cdot \text{Age 40 Plus}_i 
-+ \beta_8 \cdot \text{Post Dobbs}_i 
-+ b_{\text{Year}[i]}
-\end{align*}
-$$
-
-Our beta estimate outputs in a equation model format for the offset model:
-
-$$\log({E}[\text{Maternal Deaths}_i]) = -8.79 + 1.30\cdot\text{Black}_i + 0.27\cdot\text{White}_i	+ 0.14\cdot\text{Hispanic}_i + 1.42\cdot\text{American Indian or Alaska Native}_i \\
-+ 0.03\cdot\text{EthnicityUnknown}_i + 0.39 \cdot\text{Age 25--39}_i + 1.80\cdot\text{Age 40 Plus}_i
--0.23\cdot\text{Post Dobbs}_i + b_{\text{Year}[i]} + \log(\text{Live Births}_i)$$
-
+#### Results
 
 This is the offset model summary output:
 ```{r,results='asis'}

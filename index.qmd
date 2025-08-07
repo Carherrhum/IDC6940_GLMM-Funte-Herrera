@@ -23,9 +23,9 @@ to edit)
 ## Introduction
 
 
-  Generalized Linear Mixed Models (GLMMs) are a flexible class of statistical models that combine the features of two powerful tools: Generalized Linear Models (GLMs) and Mixed-Effects Models [@agresti2015foundations]. Like GLMs, GLMMs can model non-normal outcome variables, such as binary, count, or proportion data. However, they go a step further by incorporating random effects, which account for variation due to grouping or clustering in the data, correlated observations, and overdispersion. The GLMM method can work with complex data structures such as temporal correlation, spatial correlation , nested data, heterogeneity of variance, and repeated measurement [@zuur2009mixed].  
+  Generalized Linear Mixed Models (GLMMs) are a flexible class of statistical models that combine the strengths of two powerful frameworks: Generalized Linear Models (GLMs) and Mixed-Effects Models [@agresti2015foundations]. Like GLMs, GLMMs can model non-normal outcome variables, such as binary, count, or proportion data. However, extend GLMs by incorporating random effects, which account for variability due to grouping or clustering, correlated observations, and overdispersion. This makes GLMMs well-suited for complex data structures involving temporal or spatial correlation, nested hierarchies, heterogeneity of variance, and repeated measurements [@zuur2009mixed].  
 
-  In practical terms, GLMMs are especially useful when data points are not independent, such as when students are nested within schools, patients are treated within hospitals, or repeated measures are taken from the same subject over time. For example, Thall wrote that issues with longitudinal clinical trial basic count data from repeated measures taken from the same subject over time will have problems detecting comparable between subject outcomes because it can be difficult to determine if outcomes are time dependent or due to treatment groups, thus a general linear mixed model method may be utilized to represent dependence upon each patient, incorporate covariate data, create time as a function, account for variability between patients,and  be flexible and tractable [@thall1988mixed]. The random effects help model the correlation within clusters and allow for unobserved heterogeneity—differences that are not captured by the measured covariates.
+  In practice, GLMMs are especially useful when data points are not independent-- for example, when students are nested within schools, patients are treated within hospitals, or repeated measures are taken from the same subject over time. Thall [@thall1988mixed] noted that longitudinal clinical trials often struggle to determine whether observed changes in outcomes are attributable to treatment effects or simply the passage of time. This ambiguity makes it difficult to compare outcomes between subjects. GLMMs address this by modeling for within-subject dependence, incorporating covariates, treating time as a function, capturing variability between patients, and provides both flexibility and tractability. The random effects help model the correlation within clusters and allow for unobserved heterogeneity—differences that are not captured by the measured covariates.
 
 GLMMs are good for:
 
@@ -44,23 +44,19 @@ GLMMs are good for:
    -  Proportions or rates [@salinas2023generalized]
 
 
--  Improving inference by accounting for both fixed effects (predictors of interest) and random effects (random variation across groups)
-
-
 -  Reducing bias and inflated Type I error rates that can result from ignoring data structure [@thompson2022cluster]
 
 
-  GLMMs are ideal when your data is both complex in structure and involves non-Gaussian response variables, making them indispensable in fields like medicine, ecology, education, and social sciences. Tawiah et al describes zero-inflated Poisson GLMMs, an extension of Poisson GLMM that allows for overdispersion due to a prevalence of zeros in the data, common in health sector data [@tawiah2020zero]. The paper compares a Poisson GLM, a zero-inflated Poisson GLM, a Poisson GLMM, and a zero-inflated Poisson GLMM, applied to clustered maternal mortality data. Another paper by Owili et al utilizes a GLMM to investigate the impact of particulate matter on maternal and infant mortality globally [@owili2020impacts]. They use a Poisson link function and take year and country as random effects to account for differences in global data. 
+  GLMMs are ideal for analyzing complex data structures that involve non-Gaussian response variables, making them indispensable in fields like medicine, ecology, education, and social sciences. For example, Tawiah et al. [@tawiah2020zero] describe zero-inflated Poisson GLMMs--an extension of Poisson GLMM that allows for overdispersion due to a prevalence of zeros in the data, common in health sector data . The paper compares four models: a Poisson GLM, a zero-inflated Poisson GLM, a Poisson GLMM, and a zero-inflated Poisson GLMM, applied to clustered maternal mortality data.The study found the zero-inflated Poisson GLMM to yield to best results. Similarly, Owili et al. [@owili2020impacts] utilize a GLMM with Poisson link function to investigate the impact of particulate matter on maternal and infant mortality globally and regionally. In their global analysis, year and country are modeled as random effects to account for variation in regional data. 
 
-  We wish to analyze the data of federal maternal mortality deaths via VSRR Provisional Maternal Death Counts and Rates dataset by utilizing a General linear mixed model with Poisson link as it is count data. We wish to see if ethnicity (a fixed effect) has any influence upon maternal death per live births(number of live births per 12 month period or year) count by year(random effect). Like other public health or clinical data there will be issues such as correlated observations and overdispersion but GLMM will be utilized to parse through the noise and determine if indeed there are some patterns of maternal mortality among mothers of differing ethnic ties.
-
-
+  This study investigates the potential risks faced by mothers in a post-Roe v. Wade context, with a particular focus on the systemic disparities that continue to affect women of color during childbirth. To analyze these risks, we will apply a Generalized Linear Mixed Model (GLMM), a robust statistical method suited for complex, hierarchical data. Our goal is to examine the relationship between maternal mortality and key explanatory variables, including age group, ethnicity, and whether the death occurred during the post-Dobbs era. These findings are especially relevant as they may provide evidence to inform public health interventions aimed at reducing maternal mortality among vulnerable populations, and to assess whether the legal and healthcare shifts following the Dobbs v. Jackson Women's Health Organization decision have contributed to an increase in maternal deaths.
 
 ## Methods
 
 #### Math Background
 
-  GLMMs can be considered an extension of GLMs, wherein a GLM includes the addition of random effects, or an extension of Linear Mixed Models (LMMs), where a linear model with fixed and random effects is extended for non-normal distributions [@salinas2023generalized]. 
+  GLMMs extends GLMs, by including random effects to account for correlation and variability within clustered or repeated observations. GLMMs can also be viewed as an extension of Linear Mixed Models (LMMs), which are adapted for non-Gaussian outcome distributions [@salinas2023generalized]. 
+  
 Let
 
 - $\mathbf{y}$ be a $Nx1$ column vector outcome variable
@@ -79,32 +75,44 @@ Then the general equation for the model is given by:
 
 $$\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}{u}+\boldsymbol{\epsilon}$$
 [@salinas2023generalized].
-  The GLMM Model process is that the analyis of variance model or the equation is a vector of linear predictors with  of unknown parameters estimates. Each distribution has is its own probability function which we will utilize the Negative Binomial as GLMMs typically include a link function that relates the response variable $\mathbf{y}$ to a linear predictor, $\eta$, which excludes the residuals. So then
+  In GLMMs, the response variable $\mathbf{y}$ is assumes to follow a distribution from the exponential family. The model introduces a linear predictor, $\eta$, defined as: 
 $$\boldsymbol{\eta}=\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\lambda}$$
-The link function is $g(\cdot)$, where
+A link function relates the expected value of the response variable to this linear predictor:
 $$g(E(\mathbf{y}))=\boldsymbol{\eta}$$
-where $E(\mathbf{y})$ is the expectation of \mathbf{y}. The choice of link function depends on the outcome distribution. For this paper our data demonstrates a Negative Binomial distribution for overdispered count data, so we will use a log link function.  
+The choice of link function depends on the distribution of the outcome variable. In this study, the data is overdispersed counts, which makes the Negative Binomial distribution appropriate. Therefore, we will use a log link function.  
 $$g(\cdot)=log_e(\cdot)$$
-  In the GLMM model the  parameter estimates is solved by reducing the negative log likelihood functions [@salinas2023generalized]. The means or the least square means are derivative of the parameter estimates and are found on the model scale. The link function, negative binomial log link, will convert the mean estimates at the model scale to the data scale.
-Negative Binomial Distribution:
+  Parameter estimation in GLMMs involves maximizing the log-likelihood or minimizing the negative log-likelihood [@salinas2023generalized]. Model-derived quantities such as estimated means or least-squares means are initially computed on the model scale and can then be back-transformed to the data scale using the inverse of the link function.
+  
+  The Negative Binomial Distribution is defined as:
 $$
 f(y;k,{\mu})=\frac{\Gamma(y+k)}{\Gamma(k)*(y+1)}\left(\frac{k}{\mu+k}\right)^{k}\left(1-\frac{k}{\mu+k}\right)^{y}
 $$
-  Zuur writes that the Negative Binomial Distribution has two parameters ${\mu}$ and $k$ [@zuur2009mixed].
-The symbol ${\Gamma}$ is defined as ${\Gamma(y+1)=(y+1)!}$
-The Mean of Negative Binomial is given: $E(Y)= {\mu}$
-The Variance of Negative binomial is given; $Var(Y)= {\mu}+ \left(\frac{\mu^2}{k}\right)$, where second term determines the overdispersion, $k$ is called the dispersion parameter and indirectly determines overdispersion. If $k$ is significantly large relative to ${\mu^2}$ then the second term will approximate to zero and a Poisson distribution may as well be used. However, the smaller the $k$ value the larger the overdispersion may form and then negative binomial is the correct log link to utilize. 
+where:
+
+ - $\mu$ is the mean of the distribution,
+ 
+ - $k$ is the dispersion parameter, and
+ 
+ - $\Gamma(\cdot)$ is the gamma function, where $\Gamma(y+1)=y!$
+ 
+The mean and variance are:
+
+ - $E(Y) = \mu$
+ 
+ - $\text{Var}(Y) = \mu + \frac{\mu^2}{k}$
+ 
+  The dispersion parameter $k$ controls the degree of overdispersion. As $k \to \infty$, the variance approaches the mean, and the Nagative Binomial converges to the Poisson distribution. However, when $k$ is small, the variance increases, indicating significant overdispersion, making the Negative Binomial distribution preferable to Poisson in such cases [@zuur2009mixed]. 
 
 #### Assumptions
 
-  Before deciding to use a GLMM for our data, we had to check some assumptions (specific to our negative binomial distributed data). 
+  Before deciding to use a GLMM for our data, we had to check some assumptions (specific to our Negative Binomial distributed data). 
 
 - The response variable and the predictors have a linear relationship within the levels of random effects. 
 - The response variable is assumed to follow a negative binomial distribution, with $\sigma^2>\mu$.
 - The residuals and random effects are independent.
 - The random effects are assumed to be normally distributed, with mean 0 and variance $\sigma$.
 
-#### Model Choice 
+#### Model Selection and Implementation
 
   The quadratic nature of the Negative Binomial distribution's mean-variance relationship is ideal for overdispersed count data that the Poisson distribution cannot accommodate. Overdispersion is a given for populations due to their heterogeneity that  aggregation processes such as  community clusters form with shared traits such as ethnicity. Our data includes community cluster groups such as ethnicity and age groups.  The negative binomial model is desirable also due to its easily interpretable dispersion parameter as a measure of aggregation and its tractability due to closed form expression of probability mass function which helps in  convenient model inference and estimation.
 Since our data is longitudinal, a Negative Binomial GLMM is ideal since measurements are taken over time. We incorporate Year as a random effect because it could explain for variation in our model which could not be explained by our fixed effects such as ethnicity or age group.

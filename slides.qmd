@@ -221,7 +221,7 @@ $$g(\cdot)=log_e(\cdot)$$
 
  - Accounts for variation in the model that would not be explained by our fixed effects
 
-- Analysis performed with R [@R]
+- Analysis performed with R [@R-base]
 
 
 # Data Exploration and Visualization

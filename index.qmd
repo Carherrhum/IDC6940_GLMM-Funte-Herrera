@@ -25,7 +25,7 @@ to edit)
 
   Generalized Linear Mixed Models (GLMMs) are a flexible class of statistical models that combine the strengths of two powerful frameworks: Generalized Linear Models (GLMs) and Mixed-Effects Models [@agresti2015foundations]. Like GLMs, GLMMs can model non-normal outcome variables, such as binary, count, or proportion data. However, extend GLMs by incorporating random effects, which account for variability due to grouping or clustering, correlated observations, and overdispersion. This makes GLMMs well-suited for complex data structures involving temporal or spatial correlation, nested hierarchies, heterogeneity of variance, and repeated measurements [@zuur2009mixed].  
 
-  In practice, GLMMs are especially useful when data points are not independent-- for example, when students are nested within schools, patients are treated within hospitals, or repeated measures are taken from the same subject over time. Thall [@thall1988mixed] noted that longitudinal clinical trials often struggle to determine whether observed changes in outcomes are attributable to treatment effects or simply the passage of time. This ambiguity makes it difficult to compare outcomes between subjects. GLMMs address this by modeling for within-subject dependence, incorporating covariates, treating time as a function, capturing variability between patients, and provides both flexibility and tractability. The random effects help model the correlation within clusters and allow for unobserved heterogeneity—differences that are not captured by the measured covariates.
+  In practice, GLMMs are especially useful when data points are not independent—for example, when students are nested within schools, patients are treated within hospitals, or repeated measures are taken from the same subject over time. Thall [@thall1988mixed] noted that longitudinal clinical trials often struggle to determine whether observed changes in outcomes are attributable to treatment effects or simply the passage of time. This ambiguity makes it difficult to compare outcomes between subjects. GLMMs address this by modeling for within-subject dependence, incorporating covariates, treating time as a function, capturing variability between patients, and provides both flexibility and tractability. The random effects help model the correlation within clusters and allow for unobserved heterogeneity—differences that are not captured by the measured covariates.
 
 GLMMs are good for:
 
@@ -47,7 +47,7 @@ GLMMs are good for:
 -  Reducing bias and inflated Type I error rates that can result from ignoring data structure [@thompson2022cluster]
 
 
-  GLMMs are ideal for analyzing complex data structures that involve non-Gaussian response variables, making them indispensable in fields like medicine, ecology, education, and social sciences. For example, Tawiah et al. [@tawiah2020zero] describe zero-inflated Poisson GLMMs--an extension of Poisson GLMM that allows for overdispersion due to a prevalence of zeros in the data, common in health sector data . The paper compares four models: a Poisson GLM, a zero-inflated Poisson GLM, a Poisson GLMM, and a zero-inflated Poisson GLMM, applied to clustered maternal mortality data.The study found the zero-inflated Poisson GLMM to yield to best results. Similarly, Owili et al. [@owili2020impacts] utilize a GLMM with Poisson link function to investigate the impact of particulate matter on maternal and infant mortality globally and regionally. In their global analysis, year and country are modeled as random effects to account for variation in regional data. 
+  GLMMs are ideal for analyzing complex data structures that involve non-Gaussian response variables, making them indispensable in fields like medicine, ecology, education, and social sciences. For example, Tawiah et al. [@tawiah2020zero] describe zero-inflated Poisson GLMMs—an extension of Poisson GLMM that allows for overdispersion due to a prevalence of zeros in the data, common in health sector data . The paper compares four models: a Poisson GLM, a zero-inflated Poisson GLM, a Poisson GLMM, and a zero-inflated Poisson GLMM, applied to clustered maternal mortality data.The study found the zero-inflated Poisson GLMM to yield to best results. Similarly, Owili et al. [@owili2020impacts] utilize a GLMM with Poisson link function to investigate the impact of particulate matter on maternal and infant mortality globally and regionally. In their global analysis, year and country are modeled as random effects to account for variation in regional data. 
 
   This study investigates the potential risks faced by mothers in a post-Roe v. Wade context, with a particular focus on the systemic disparities that continue to affect women of color during childbirth. To analyze these risks, we will apply a Generalized Linear Mixed Model (GLMM), a robust statistical method suited for complex, hierarchical data. Our goal is to examine the relationship between maternal mortality and key explanatory variables, including age group, ethnicity, and whether the death occurred during the post-Dobbs era. These findings are especially relevant as they may provide evidence to inform public health interventions aimed at reducing maternal mortality among vulnerable populations, and to assess whether the legal and healthcare shifts following the Dobbs v. Jackson Women's Health Organization decision have contributed to an increase in maternal deaths.
 
@@ -117,9 +117,45 @@ The mean and variance are:
   The quadratic nature of the Negative Binomial distribution's mean-variance relationship is ideal for overdispersed count data that the Poisson distribution cannot accommodate. Overdispersion is a given for populations due to their heterogeneity that  aggregation processes such as  community clusters form with shared traits such as ethnicity. Our data includes community cluster groups such as ethnicity and age groups.  The negative binomial model is desirable also due to its easily interpretable dispersion parameter as a measure of aggregation and its tractability due to closed form expression of probability mass function which helps in  convenient model inference and estimation.
 Since our data is longitudinal, a Negative Binomial GLMM is ideal since measurements are taken over time. We incorporate Year as a random effect because it could explain for variation in our model which could not be explained by our fixed effects such as ethnicity or age group.
 
-  We perform the analysis with R [@R] and the packages lme4 {@lme4} with function glmer to investigate poisson model or glmer.nb() for negative binomial model and the package glmmTMB {@glmmTMB} with the function, nbinom2(), for negative binomial model. The approximate parameter estimation method uses for glmmTMB uses AGQ or Laplace approximation with Wald Z significance test. The default approximate parameter estimation method for lme4  is Laplace approximation when no quadrature point is used but is pseudo-likelihood method in linearization,and integral approximation and another estimation method is Gauss-Hermite quadrature to approximate the log-likelihood using numerical integration[@salinas2023generalized].
+  We conduct our analyses in R [@R-base], using the following packages and functions for modeling:
 
-  Densities are seen as counts per volume and can be modeled with NB and offset variable [@zuur2009mixed]. We are investigating maternal deaths per live births and while we can use the variable Maternal Mortality rate, it would be less noisy if we used the offset variable log(Live Births). We can also model without the offset and utilize Akaike information Criterion, AIC, to see which is the better model as the smaller the AIC would indicate a better model. A random effect could be month,year, or month/year. Fixed effects could be age groups, ethnicity, and perhaps year. Our choice of random or fixed effects are dependent on the question we which to investigate. 
+- `lme4` [@lme4]:
+
+  - `glmer()` for Poisson GLMMs
+
+- `glmmTMB` [@glmmTMB]:
+
+  - `glmmTMB(..., family = nbinom2)` for Negative Binomial GLMMs
+  
+Each function employs different methods for parameter estimation:
+
+- `glmmTMB` uses Adaptive Gauss-Hermite Quadrature (AGQ) or Laplace approximation, along with Wald Z-tests for fixed-effect significance [@glmmTMB].
+
+- `lme4` defaults to the Laplace approximation for log-likelihood estimation and can also use Gauss-Hermite quadrature for more precise estimation but reduced speed [@lme4]. 
+
+Densities, such as maternal deaths per number of live births, can be modeled using count data with an offset variable [@zuur2009mixed]. While maternal mortality rate could be modeled directly, using an offset, specifically log(Live Births), enables more stable and interpretable modeling of raw counts.
+
+  We plan to compare models both with and without the offset term, evaluating them using the Akaike Information Criterion (AIC). The model with the lower AIC is preferred, as it balances goodness of fit with model complexity.
+
+  The selection of fixed vs. random effects in our models depend on the specific research question.
+  
+Random effects may include:
+
+- Year
+
+- Month
+
+- Nested terms such as Month/Year
+
+Fixed effects may include:
+
+- Age group
+
+- Ethnicity
+
+- Year (if not treated as random)
+
+- Dobbs Era (pre- or post-)
 
 ## Analysis and Results
 
@@ -231,24 +267,23 @@ cutoff <- as.Date("2022-06-24")##when Roe v.Wade was overturned
 deaths_df3$Dobbs_Era <- ifelse(deaths_df3$Date < cutoff, "Pre-Dobbs", "Post-Dobbs")
 deaths_df3$Dobbs_Era <- factor(deaths_df3$Dobbs_Era, levels = c("Pre-Dobbs", "Post-Dobbs"))
 
-
 df_age_year <- deaths_df %>%
   filter(!is.na(Age_Group), !is.na(Year)) %>%
   group_by(Year, Age_Group) %>%
   summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
-df_age_year
+#df_age_year
 
 df_total_year <-deaths_df%>%
   filter(Group=="Total") %>%
   group_by(Year, Is_Total) %>%
   summarise(Maternal_Deaths = sum(Maternal_Deaths, na.rm = TRUE))
-df_total_year
+#df_total_year
 ```
   The below chart gives an idea of the missing values in the dataset. It seems like there are many NAs in ethnicity and age group, certainly more than is acceptable. The dataset indicates that Maternal Deaths between 1 and 9 are suppressed for privacy reasons. With more investigation, it appears that the racial/ethnic group "Native Hawaiian or Other Pacific Islander, Non-Hispanic" has NA for 70 (all but 2) Maternal Deaths values. We decided to omit this subgroup entirely. There are 58 missing Maternal Mortality Rate entries in "American Indian or Alaska Native, Non-Hispanic", which will not be an issue as we are not using rate explicitly in our model (though we will examine it during our Exploratory Data Analysis). Finally, there are seven NA Maternal Deaths also in the "American Indian or Alaska Native, Non-Hispanic" category, a number that is reasonable to omit. 
 ```{r}
 plot_missing(df)
 ```
-  Since our data is longitudinal, it is easy to visualize with graphs. Below is a bar chart that shows the distibution of Maternal Deaths by racial/ethnic group. The counts indicated the sum of the Maternal Deaths for each group over the span of the data (2019-2024).
+  Since our data is longitudinal, it is easy to visualize with graphs. Below is a bar chart that shows the distribution of Maternal Deaths by racial/ethnic group. The counts indicated the sum of the Maternal Deaths for each group over the span of the data (2019-2024). Since these are sums of maternal death counts, they are reflective of the relative population of each group. Namely, white women had the largest number of deaths as they are the largest population, and American Indian or Alaska Native had the least deaths as the smallest population. 
 ```{r}
 #Data Exploration Graphs
 colors=c('yellow','orange', 'blue', 'red', 'green')
@@ -261,7 +296,7 @@ df_ethnicity$Ethnicity <- factor(df_ethnicity$Ethnicity, levels = desired_order)
 ggplot(df_ethnicity, aes(x = Ethnicity, y = Maternal_Deaths, fill = Ethnicity)) +
   geom_col() +
   labs(
-    title = "Maternal Mortality Totals 2019–2024 by Ethnicity",
+    title = "Maternal Mortality Totals by Ethnicity",
     x = "Ethnicity",
     y = "Maternal Deaths"
   ) +
@@ -271,28 +306,31 @@ ggplot(df_ethnicity, aes(x = Ethnicity, y = Maternal_Deaths, fill = Ethnicity)) 
     legend.position = "none")
 ```
 
-```{r}
+```{r,echo=FALSE,include=FALSE}
+#kind of unnecessary plot so hidden
 df_tot_year_ts<-ts(df_total_year$Maternal_Deaths, start = c(2019), frequency = 1)
-plot.ts(df_tot_year_ts,main='Yearly Total Maternal Deaths 2019-2024',xlab='Year',ylab='Maternal Deaths',col='navy')
+plot.ts(df_tot_year_ts,main='Yearly Maternal Deaths 2019-2024',xlab='Year',ylab='Maternal Deaths',col='navy')
 ```
 
-```{r}
-df_tot_year_rate <- deaths_df%>%
-  filter(Group=='Total')%>%
-  select(Maternal_Mortality_Rate)
-df_tot_year_rate_ts<-ts(df_tot_year_rate$Maternal_Mortality_Rate, start = c(2019,1), frequency = 12)
-plot.ts(df_tot_year_rate_ts,main='Monthly Total Maternal Mortality Rate 2019-2024',xlab='Year',ylab='Maternal Deaths per 100,000 Live Births',col='navy')
-```
-
+Below is a plot of monthly maternal deaths. The death count starts at 660 in January 2019, increases over time to a peak of 1249 in February 2022, decreases until November 2023 to 665, increases again slightly then holds close to 700 in the latter part of 2024. 
 
 ```{r}
 total_df <- deaths_df%>%
   filter(Group=='Total')
 total_ts <- ts(total_df$Maternal_Deaths,start=c(2019,1),frequency=12)
-plot.ts(total_ts,main='Monthly Total Maternal Deaths 2019-2024',ylab='Maternal Deaths',xlab='Time',col='navy')  
+plot.ts(total_ts,main='Monthly Maternal Deaths',ylab='Maternal Deaths',xlab='Time',col='navy')  
 ```
-
+Similar to the above plot, this shows the monthly maternal death **rate**. The rate is considered the number of deaths per 100,000 live births. Since the number of live births is roughly constant, with only small fluctuations over the six year period, the monthly maternal death rate plot has the nearly identical shape as the monthly maternal death plot. The death rate goes from 17.4 in January 2019, to 33.8 in February 2022, to 18.4 in November 2023, then hovers around 19.3 in late 2024.
 ```{r}
+df_tot_year_rate <- deaths_df%>%
+  filter(Group=='Total')%>%
+  select(Maternal_Mortality_Rate)
+df_tot_year_rate_ts<-ts(df_tot_year_rate$Maternal_Mortality_Rate, start = c(2019,1), frequency = 12)
+plot.ts(df_tot_year_rate_ts,main='Monthly Maternal Mortality Rate',xlab='Year',ylab='Maternal Deaths per 100,000 Live Births',col='navy')
+```
+Below are plots with maternal deaths and maternal mortality rate, both by ethnicity. In the left graph, note that white, black, and Hispanic deaths mirror the spike from the total monthly death plot, but Asian and American Indian or Alaska Native deaths stay steady. The right plot shows the highest death rates around 2022 for all ethnicities, including the two that did not experience an increase in deaths.
+```{r,fig.width=10, fig.height=4}
+par(mfrow = c(1, 2))
 His <- filtered_df%>%
   filter(Subgroup=='Hispanic')%>%
   select(Maternal_Deaths)%>%
@@ -316,17 +354,16 @@ aina <- df%>%
 ethn_ts <- bind_cols(His,bl,wh,as,aina) 
 ethn_ts <- ts(ethn_ts, start=c(2019,1), frequency = 12)
 colors=c('red','blue','green','orange','yellow')
-plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity 2019-2024', ylab='Maternal Deaths',xlab='Time',col=colors)
+plot.ts(ethn_ts, plot.type='single',main='Monthly Maternal Deaths by Ethnicity', ylab='Maternal Deaths',xlab='Time',col=colors)
 legend("topleft",                     
        legend = c("Hispanic", "Black, Non-Hispanic", "White, Non-Hispanic",'Asian, Non-Hispanic','American Indian, Alaska Native, Non-Hisp'),  # Labels
        col = colors,                   
        lty = 1,                        
        lwd = 2,                     
        bty = "n",
-       cex = 0.8)                      
-```
+       cex = 0.8)
 
-```{r}
+
 HisR <- filtered_df%>%
   filter(Subgroup=='Hispanic')%>%
   select(Maternal_Mortality_Rate)%>%
@@ -350,17 +387,19 @@ ainaR <- df%>%
 ethnR_ts <- bind_cols(HisR,blR,whR,asR,ainaR) 
 ethnR_ts <- ts(ethnR_ts, start=c(2019,1), frequency = 12)
 colors=c('red','blue','green','orange','yellow')
-plot.ts(ethnR_ts, plot.type='single',main='Monthly Maternal Mortality Rate by Ethnicity 2019-2024', ylab='Maternal Deaths per 100,000 Live Births',xlab='Time',col=colors)
+plot.ts(ethnR_ts, plot.type='single',main='Monthly Maternal Mortality Rate by Ethnicity', ylab='Deaths per 100,000 Live Births',xlab='Time',col=colors)
 legend("topleft",                     
        legend = c("Hispanic", "Black, Non-Hispanic", "White, Non-Hispanic",'Asian, Non-Hispanic','American Indian, Alaska Native, Non-Hisp'),  # Labels
        col = colors,                   
        lty = 1,                        
        lwd = 2,                     
        bty = "n",
-       cex = 0.7)            
+       cex = 0.7)  
+par(mfrow = c(1, 1))
 ```
-
-```{r}
+Below are maternal deaths and death rate by age group. The greatest number of deaths occur in the 25-39 years group, reflective of the greater number of women of that age that give birth. Inc contrast, women 40 and over have the highest death rate, and women 25 and under have the smallest. 
+```{r, fig.width=10, fig.height=4}
+par(mfrow = c(1, 2))
 ageu25 <- deaths_df%>%
   filter(Subgroup=='Under 25 years')%>%
   select(Maternal_Deaths)%>%
@@ -376,7 +415,7 @@ ageo40 <- filtered_df%>%
 age_ts <- bind_cols(ageu25,age25,ageo40) 
 age_ts <- ts(age_ts, start=c(2019,1), frequency = 12)
 colors=c('red','blue','green')
-plot.ts(age_ts, plot.type='single',main='Monthly Maternal Deaths by Age Group 2019-2024', ylab='Maternal Deaths',xlab='Time',col=colors)
+plot.ts(age_ts, plot.type='single',main='Monthly Maternal Deaths by Age Group', ylab='Maternal Deaths',xlab='Time',col=colors)
 legend("topleft",                     
        legend = c("Under 25 Years", "25-39 Years", "40 Years and over"),  # Labels
        col = colors,                   
@@ -384,9 +423,7 @@ legend("topleft",
        lwd = 2,                     
        bty = "n",
        cex = 0.8) 
-```
 
-```{r}
 ageu25R <- deaths_df%>%
   filter(Subgroup=='Under 25 years')%>%
   select(Maternal_Mortality_Rate)%>%
@@ -402,7 +439,7 @@ ageo40R <- filtered_df%>%
 ageR_ts <- bind_cols(ageu25R,age25R,ageo40R) 
 ageR_ts <- ts(ageR_ts, start=c(2019,1), frequency = 12)
 colors=c('red','blue','green')
-plot.ts(ageR_ts, plot.type='single',main='Monthly Maternal Mortality Rate by Age Group 2019-2024', ylab='Maternal Deaths per 100,000 live Births',xlab='Time',col=colors)
+plot.ts(ageR_ts, plot.type='single',main='Monthly Maternal Mortality Rate by Age Group', ylab='Deaths per 100,000 live Births',xlab='Time',col=colors)
 legend("topleft",                     
        legend = c("Under 25 Years", "25-39 Years", "40 Years and over"),  # Labels
        col = colors,                   
@@ -410,18 +447,17 @@ legend("topleft",
        lwd = 2,                     
        bty = "n",
        cex = 0.8) 
+par(mfrow = c(1, 1))
 ```
-Below are histograms showcasing the distribution of the Maternal Deaths for Ethnicity, Age, and Total. 
+Below are histograms showcasing the distribution of the outcome variable, Maternal Deaths. It roughly showcases a Negative Binomial Distribution. 
 ```{r}
-plot_histogram(deaths_df_ethnic$Maternal_Deaths,title='Histogram of Maternal Deaths - Ethnicity')
-plot_histogram(deaths_df_age$Maternal_Deaths, title='Histogram of Maternal Deaths - Age')
+#plot_histogram(deaths_df_ethnic$Maternal_Deaths,title='Histogram of Maternal Deaths - Ethnicity')
+#plot_histogram(deaths_df_age$Maternal_Deaths, title='Histogram of Maternal Deaths - Age')
 plot_histogram(total_df$Maternal_Deaths,title='Histogram of Maternal Deaths - Total')
 ```
 
-
-This is a graph showing observed deaths over time by using statistics of sum of dataframe data.
-
-```{r}
+```{r,echo=FALSE,include=FALSE}
+#This is a graph showing observed deaths over time by using statistics of sum of dataframe data.
 library(ggplot2)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Ethnicity)) +
   stat_summary(fun = sum, geom = "line", size = 1) +
@@ -430,9 +466,10 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, 
        x = "Year", y = "Observed Maternal Deaths") +
   theme_minimal()
 ```
-This is a graph showing observed deaths over time by using statistics of sum of dataframe data.
 
-```{r}
+
+```{r,echo=FALSE,include=FALSE}
+#This is a graph showing observed deaths over time by using statistics of sum of dataframe data.
 library(ggplot2)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, color = Age_Group)) +
   stat_summary(fun = sum, geom = "line", size = 1) +
@@ -442,8 +479,9 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Deaths, 
   theme_minimal()
 ```
 
-We used variable maternal mortality rate to see maternal mortality rate over time by ethnicity and by using dataframe data and averages to plot lines and points.
-```{r}
+
+```{r,echo=FALSE,include=FALSE}
+#We used variable maternal mortality rate to see maternal mortality rate over time by ethnicity and by using dataframe data and averages to plot lines and points.
 library(ggplot2)
 library(ggeffects)
 
@@ -458,10 +496,8 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
   theme_minimal()
 ```
 
-
-
-We used variable maternal mortality rate to see maternal mortality rate over time by age group and by using dataframe data and averages to plot lines and points.
-```{r}
+```{r,echo=FALSE,include=FALSE}
+#We used variable maternal mortality rate to see maternal mortality rate over time by age group and by using dataframe data and averages to plot lines and points.
 library(ggplot2)
 library(ggeffects)
 ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortality_Rate, color = Age_Group)) +
@@ -472,8 +508,8 @@ ggplot(deaths_df3, aes(x = as.numeric(as.character(Year)), y = Maternal_Mortalit
   theme_minimal()
 ```
 
-This is a plot of maternal deaths over time by age group facet wrapped by age group by only utilizing dataframe data.
-```{r}
+```{r,echo=FALSE,include=FALSE}
+#This is a plot of maternal deaths over time by age group facet wrapped by age group by only utilizing dataframe data.
 ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
   geom_point() +
   geom_line(aes(group = Age_Group)) +
@@ -481,9 +517,8 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Age_Group)) +
   labs(title = "Maternal Deaths Over Time by Age Group")
 ```
 
-This is a plot of maternal deahs over time by age group facet wrapped by dobbs era by only utilizing dataframe data.
-
-```{r}
+```{r,echo=FALSE,include=FALSE}
+#This is a plot of maternal deahs over time by age group facet wrapped by dobbs era by only utilizing dataframe data.
 library(ggplot2)
 
 ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Dobbs_Era)) +
@@ -492,19 +527,17 @@ ggplot(deaths_df3, aes(x = Year, y = Maternal_Deaths, color = Dobbs_Era)) +
   labs(title = "Maternal Deaths Over Time by Dobbs Era")
 ```
 
-
-
-These are boxplots of maternal deaths that show their distribution  by each fixed effect.
+These are boxplots of maternal deaths that show the distribution based on our created variable Dobbs Era (described later in Methods). Pre-Dobbs has a higher median as well as more variability in the death counts, than post-Dobbs. Both eras have outliers, but pre-Dobbs outliers are higher. Both eras are also right skewed.
 ```{r}
 
-ggplot(deaths_df3, aes(x = Age_Group, y = Maternal_Deaths)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Maternal Deaths by Age Group")
+#ggplot(deaths_df3, aes(x = Age_Group, y = Maternal_Deaths)) +
+  #geom_boxplot() +
+  #labs(title = "Distribution of Maternal Deaths by Age Group")
 
-ggplot(deaths_df3, aes(x = Ethnicity, y = Maternal_Deaths)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(title = "Distribution of Maternal Deaths by Ethnicity")
+#ggplot(deaths_df3, aes(x = Ethnicity, y = Maternal_Deaths)) +
+  #geom_boxplot() +
+  #theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+ # labs(title = "Distribution of Maternal Deaths by Ethnicity")
 
 ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
   geom_boxplot() +
@@ -512,16 +545,7 @@ ggplot(deaths_df3, aes(x = Dobbs_Era, y = Maternal_Deaths)) +
 
 ```
 
-```{r}
-#check overdispersion by for ethnicity data
-deaths_df_ethnic %>% summarize(mean(Maternal_Deaths),
-var(Maternal_Deaths))
-#check overdispersion for age data
-deaths_df_age %>% summarize(mean(Maternal_Deaths),var(Maternal_Deaths))
-#check overdispersion for total data
-total_df %>% summarize(mean(Maternal_Deaths),
-var(Maternal_Deaths))
-```
+
 
 ### Modeling and Results
 
@@ -638,7 +662,11 @@ lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
 
 - The response variable is assumed to follow a negative binomial distribution, with $\sigma^2>\mu$.
 
-
+```{r}
+#check overdispersion
+total_df %>% summarize(mean(Maternal_Deaths),
+var(Maternal_Deaths))
+```
 
 
 - The residuals and random effects are independent.

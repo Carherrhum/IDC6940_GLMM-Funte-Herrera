@@ -815,13 +815,7 @@ library(sjPlot)
 tab_model(all_glmmodel_nb,
           title = " GLMM negative binomial model with offset")
 
-#residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects
-#variance for random intercept of group year is 0.03
-#ICC- intraclass correlation- 0.00 of the proportion of the total variance explained by year, which is nothing year contributes nothing to explaining variation in maternal deaths it happens within years not between them
-##5.5% of proportion of variance explained  by fixed effects only, they only exlain 5.5% of variance in maternal deaths sad
-## conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
 
-##our low variability could be due to not having a random effect like state or abortion access fixed variable
 ```
 </div>
 
@@ -856,11 +850,7 @@ sjPlot::tab_model(allno_glmmodel_nb,
 sjPlot::tab_model(allno_glmmodel_nb,
           title = "Fixed Effects from GLMM with outset(Incidence Rates Ratios)")
 
-#residual variance is 0.01, variance in maternal deaths not explained by fixed effects or random effects
-#variance for random intercept of group year is 0.03
-#ICC- intraclass correlation-0.71 of the proportion of the total variance explained by year, which is nothing year contributes nothing to explaining variation in maternal deaths it happens within years not between them--SUSPPICiOUSLY HIGH
-##97.1% of proportion of variance explained  by fixed effects only, they only explain 5.5% of variance in maternal deaths sad
-## conditional 99.2% is the proportion of variance contributed by fixed and random effectsToo good to be true
+
 ```
 </div>
 

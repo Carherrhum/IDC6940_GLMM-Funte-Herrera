@@ -50,7 +50,7 @@ GLMMs are good for:
 
   GLMMs are ideal for analyzing complex data structures that involve non-Gaussian response variables, making them indispensable in fields like medicine, ecology, education, and social sciences. For example, Tawiah et al. [@tawiah2020zero] describe zero-inflated Poisson GLMMs—an extension of Poisson GLMM that allows for overdispersion due to a prevalence of zeros in the data, common in health sector data . The paper compares four models: a Poisson GLM, a zero-inflated Poisson GLM, a Poisson GLMM, and a zero-inflated Poisson GLMM, applied to clustered maternal mortality data.The study found the zero-inflated Poisson GLMM to yield to best results. Similarly, Owili et al. [@owili2020impacts] utilize a GLMM with Poisson link function to investigate the impact of particulate matter on maternal and infant mortality globally and regionally. In their global analysis, year and country are modeled as random effects to account for variation in regional data. 
 
-  This study investigates the potential risks faced by mothers in a post-Roe v. Wade context, with a particular focus on the systemic disparities that continue to affect women of color during childbirth. To analyze these risks, we will apply a Generalized Linear Mixed Model (GLMM), a robust statistical method suited for complex, hierarchical data. Our goal is to examine the relationship between maternal mortality and key explanatory variables, including age group, ethnicity, and whether the death occurred during the post-Dobbs era. These findings are especially relevant as they may provide evidence to inform public health interventions aimed at reducing maternal mortality among vulnerable populations, and to assess whether the legal and healthcare shifts following the Dobbs v. Jackson Women's Health Organization decision have contributed to an increase in maternal deaths.
+  This study investigates the potential risks faced by mothers in a post-Roe v. Wade context, with a particular focus on the systemic disparities that continue to affect women of color during childbirth[@compton2022overturning],[@tran2023disparities]. To analyze these risks, we will apply a Generalized Linear Mixed Model (GLMM), a robust statistical method suited for complex, hierarchical data. Our goal is to examine the relationship between maternal mortality and key explanatory variables, including age group, ethnicity, and whether the death occurred during the post-Dobbs era. These findings are especially relevant as they may provide evidence to inform public health interventions aimed at reducing maternal mortality among vulnerable populations, and to assess whether the legal and healthcare shifts following the Dobbs v. Jackson Women's Health Organization decision have contributed to an increase in maternal deaths.
 
 ## Methods
 
@@ -102,7 +102,7 @@ The mean and variance are:
  
  - $\text{Var}(Y) = \mu + \frac{\mu^2}{k}$
  
-  The dispersion parameter $k$ controls the degree of overdispersion. As $k \to \infty$, the variance approaches the mean, and the Nagative Binomial converges to the Poisson distribution. However, when $k$ is small, the variance increases, indicating significant overdispersion, making the Negative Binomial distribution preferable to Poisson in such cases [@zuur2009mixed]. 
+  The dispersion parameter $k$ controls the degree of overdispersion. As $k \to \infty$, the variance approaches the mean, and the Negative Binomial converges to the Poisson distribution. However, when $k$ is small, the variance increases, indicating significant overdispersion, making the Negative Binomial distribution preferable to Poisson in such cases [@zuur2009mixed]. 
 
 #### Assumptions
 
@@ -674,7 +674,7 @@ The best-performing models included the fixed effects Ethnicity, Age_Group, and 
 
 The model with the lowest AIC (4561.1) included all fixed effects but excluded the offset. The next-best model, with an AIC of 4568.0, included the same fixed effects with the offset. Despite the slightly higher AIC, the offset-included model is more appropriate and valid, as it accounts for differences in exposure across groups (i.e., varying numbers of live births).
 
-Excluding the offset implies that all observations have equal exposure — suggesting, for instance, that every ethnic group has the same number of live births each year, which is not the case. In contrast, including the offset adjusts for the actual number of live births, yielding rate-based estimates that correctly reflect the underlying population structure. While the offset-free model appears better based on AIC alone, it leads to biased estimates due to ignoring exposure variability [@hilbe2011negative] [@nguyen2020guide] [@ha2023r].
+Excluding the offset implies that all observations have equal exposure — suggesting, for instance, that every ethnic group has the same number of live births each year, which is not the case. In contrast, including the offset adjusts for the actual number of live births, yielding rate-based estimates that correctly reflect the underlying population structure. While the offset-free model appears better based on AIC alone, it leads to biased estimates due to ignoring exposure variability [@hilbe2011negative], [@nguyen2020guide], [@ha2023r].
 
 The majority of our visualizations will be based on the model with all fixed effects and with offset. Visualizations based on the non-offset model are included later for comparison with the offset model.
 
@@ -950,7 +950,7 @@ par(mfrow = c(1, 1))
 ```
 
 
-  Without offset, the GLMM model implies that the population with the largest number of deaths (age group 25-39) contributes most to maternal mortality rate. However, the riskiest pregnancies 40 and over women, while still being the smallest population. The plot of the model with offsets  shows clearly the risk to women over 40 giving birth. 
+  Without offset, the GLMM model implies that the population with the largest number of deaths (age group 25-39) contributes most to maternal mortality rate. However, the riskiest pregnancies 40 and over women, while still being the smallest population iving birth [@sheen2018maternal]. The plot of the model with offsets  shows clearly the risk to women over 40 giving birth. 
 
 ```{r,fig.width=10, fig.height=4}
 par(mfrow = c(1, 2))
@@ -974,7 +974,7 @@ par(mfrow = c(1, 1))
 ```
 
 
-  These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Age group. The model with offsets shows that the women at most risk for maternal death are black and American Indian or Native Alaskan over the age of 40, though the age range increased risk to all ethnicities. 
+  These are predictions of maternal deaths by using the models with and without offset and with predictions using the fixed effects of Ethnicity and Age group. The model with offsets shows that the women at most risk for maternal death are black and American Indian or Native Alaskan over the age of 40, though the age range increased risk to all ethnicities[@macdorman2018trends]. 
   Without offsets, the model focuses on the age and ethnicities with the largest populations of women that give birth, such as white women aged 25-39, followed by women of black, Hispanic, and unknown race/ethnicities. American Indian or Alaska Native are shown to have very low mortality rate because it is a smaller population overall.
 
 
@@ -1071,7 +1071,7 @@ p1/p2
 
 - Due to the Covid-19 pandemic's impact on the healthcare system, access to regular healthcare was restricted. This likely had an impact on maternal mortality and may partially account for increased rates from around 2022.
 
-- More variables in the dataset would offer a better picture of the predictors of maternal mortality, specifically in regards to their relationship with ethnicity. Prenatal health, healthcare access, abortion access, and other prenatal behaviors would be useful.
+- More variables in the dataset would offer a better picture of the predictors of maternal mortality, specifically in regards to their relationship with ethnicity. Prenatal health, healthcare access, abortion access, and other prenatal behaviors would be useful[@chinn2020maternal].
  
 ### Conclusion
 
@@ -1079,15 +1079,15 @@ We initially hypothesized that our Dobbs Era variable would reveal changes in ma
 
 Additionally, investigation into healthcare access for expecting mothers specific to the Covid-19 pandemic would give insight into the spike in maternal mortality rate in 2022. Given that mortality rate reaches its peak in February 2022 (months before Dobbs), it would be valuable to determine what effect is due to the pandemic in order to better evaluate the impact of the overturn of Roe v. Wade. 
 
-  Regardless of these limitations, our results reaffirm a well-established and deeply concerning reality: minority women—particularly American Indian or Alaska Native women, and Black women—face significantly higher maternal mortality risks.
+  Regardless of these limitations, our results reaffirm a well-established and deeply concerning reality: minority women—particularly American Indian or Alaska Native women, and Black women—face significantly higher maternal mortality risks[@cusack2024maternal], [@tran2023disparities].
   
-  In American Indian or Alaska Native communities, healthcare is often provided through the Indian Health Service (IHS). While this care is free, it is not always well-resourced. Health professionals within IHS are often rotated between reservations, making it difficult for patients to build long-term relationships with providers. This lack of consistency may contribute to mistrust, underreporting of symptoms, and missed clinical cues, further elevating health risks.
+  In American Indian or Alaska Native communities, healthcare is often provided through the Indian Health Service (IHS)[@sequist2011trends], [@kruse2022indian]. While this care is free, it is not always well-resourced. Health professionals within IHS are often rotated between reservations, making it difficult for patients to build long-term relationships with providers. This lack of consistency may contribute to mistrust, underreporting of symptoms, and missed clinical cues, further elevating health risks.
   
-  Similarly, Black women may struggle with issus in with the healthcare system. They may not be heard by their healthcare professionals and which leads to preventable complications and deaths during and after childbirth.
+  Similarly, Black women may struggle with issues in with the healthcare system[@tran2023disparities]. They may not be heard by their healthcare professionals and which leads to preventable complications and deaths during and after childbirth.
   
- The higher maternal mortality for women over the age of 40 is to be expected, as geriatric pregnancies (those over age 35) are high risk. However, perhaps age is only one part of the picture. Women in this age range often face many life stressors, such as caring for both children and aging parents, while also experiencing age-related health changes that may further elevate pregnancy risks.
+ The higher maternal mortality for women over the age of 40 is to be expected, as geriatric pregnancies (those over age 35) are high risk[@sheen2018maternal]. However, perhaps age is only one part of the picture. Women in this age range often face many life stressors, such as caring for both children and aging parents, while also experiencing age-related health changes that may further elevate pregnancy risks.
  
-It’s important to note that our models cannot fully explain the why behind the disparities in mortality rate between these high risk populations. We are not present in the delivery room, during prenatal appointments, or throughout the postpartum period—moments where critical complications can arise. Moreover, while some datasets track prenatal care and health behaviors, they often do not follow maternal outcomes beyond live birth, limiting our ability to connect prenatal risk to maternal death.
+It’s important to note that our models cannot fully explain the why behind the disparities in mortality rate between these high risk populations[@chinn2020maternal]. We are not present in the delivery room, during prenatal appointments, or throughout the postpartum period—moments where critical complications can arise. Moreover, while some datasets track prenatal care and health behaviors, they often do not follow maternal outcomes beyond live birth, limiting our ability to connect prenatal risk to maternal death.
   
   
   

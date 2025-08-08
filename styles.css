@@ -26,3 +26,11 @@
   margin-left: -4em;
   margin-right: -4em;
 }
+.scroll-box-vertical2 {
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: monospace;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+}

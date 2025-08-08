@@ -6,6 +6,7 @@ date: '`r Sys.Date()`'
 format:
   html:
     code-fold: true
+    css: styles.css
 course: Capstone Projects in Data Science
 bibliography: references.bib # file contains bibtex for references
 #always_allow_html: true # this allows to get PDF with HTML features
@@ -575,16 +576,25 @@ Lastly, we created a new variable, Dobbs_Era, to distinguish between periods bef
 
 #### Modeling
 
-We created models with different combinations of fixed variables of Ethnicity, Age Group, Dobbs Era and the random effect variable year. We first tested Poisson models and found that they all had significant evidence of overdispersion and thus a GLMM of negative binomial family was the best method for modeling this data. Parameters Age_GroupUnknown were not estimable" this is what's causing the rank deficiency.
+We created models with different combinations of fixed effects, including Ethnicity, Age Group, and Dobbs Era, along with Year as a random effect. Initially, we tested a Poisson model, which showed significant evidence of overdispersion. Due to this, we proceeded with the Negative Binomial Distribution as the family for our models.
+
+During model fitting, we encountered issues with rank deficiency caused by the parameter Age_GroupUnknown, which was not estimable due to insufficient or non-informative data in that category.
+
+
+Below is the output of the Poisson model that we ran, and then the overdispersion test.
+<div class="scroll-box-vertical2">
 ```{r}
+
 poissonmodel_glmm_all <- glmer(Maternal_Deaths ~ Ethnicity +Age_Group+ Dobbs_Era+(1|Year),
                               offset=log(Live_Births),
                               family = poisson(link = "log"), 
                               data = deaths_df3)
+
 poissonmodel_glmm_all
+
 ```
 
-
+</div>
 
 ```{r}
 check_overdispersion(poissonmodel_glmm_all)
@@ -592,6 +602,8 @@ check_overdispersion(poissonmodel_glmm_all)
 ```
 
 
+Below we run four Negative Binomial GLMM models. The output is displayed, and then a table summarizing the results follows.
+<div class="scroll-box-vertical2">
 ```{r}
 ##with offset # all fixed effects
 all_glmmodel_nb <- glmmTMB(
@@ -603,11 +615,11 @@ all_glmmodel_nb <- glmmTMB(
 summary(all_glmmodel_nb)
 
 ```
+</div>
 
 
 
-
-
+<div class="scroll-box-vertical2">
 ```{r}
 ethnicity_agegroup_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity+ Age_Group + (1|Year),
@@ -617,8 +629,8 @@ ethnicity_agegroup_glmmodel_nb <- glmmTMB(
 )
 summary(ethnicity_agegroup_glmmodel_nb)
 ```
-
-
+</div>
+<div class="scroll-box-vertical2">
 ```{r}
 
 ##with no offset # all fixed effects #with not offset we can just use maternal mortality rate per 100,0000 live_births
@@ -630,7 +642,8 @@ allno_glmmodel_nb <- glmmTMB(
 summary(allno_glmmodel_nb)
 
 ```
-
+</div>
+<div class="scroll-box-vertical2">
 ```{r}
 ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
   Maternal_Deaths ~  Ethnicity+ Age_Group + (1 |Year),
@@ -639,22 +652,26 @@ ethnicity_agegroupno_glmmodel_nb <- glmmTMB(
 )
 summary(ethnicity_agegroupno_glmmodel_nb)
 ```
+</div>
 
+Here is the table summarizing model performance parameters. 
+<div class="scroll-box-vertical2">
 ```{r}
 
 
 MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
 
 ```
+</div>
+We also ran models including or excluding the offset (log(Live_Births)) to see if there were be differences in AIC and estimates. AIC is the value in which we used to see how well a model performed.
+The best performing models were those with the fixed effects Ethnicity, Age Group, and Dobbs Era and random effect Year. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models, however did drop the Age Group Unknown factor from inclusion.
 
-  We also ran models including or excluding the offset (log(Live_Births)) to see if there were be differences in AIC and estimates. AIC is the value in which we used to see how well a model performed. The best performing models were those with the fixed effects Ethnicity, Age Group, and Dobbs Era and random effect Year. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models, however did drop the Age Group Unknown factor from inclusion.
+  The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7).
   
-  The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7). However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
+  However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
 
 
 Thus our visualizations will be based on the model with offset and all fixed effects.
-
-Our Chosen model Regression equation format:
 
 $$
 \begin{align*}
@@ -672,7 +689,7 @@ $$
 \end{align*}
 $$
 
-The non offset model format:
+Here is equation for the non-offset model:
 
 $$
 \begin{align*}
@@ -689,7 +706,7 @@ $$
 \end{align*}
 $$
 
-Our beta estimate outputs in a equation model format for the offset model:
+Here are the beta estimates in a equation model format for the offset model:
 
 $$
 \begin{align*}
@@ -698,11 +715,11 @@ $$
 \end{align*}
 $$
 
-#### Testing Assumptions
+#### Verifying Assumptions
 
-Our chosen model adheres by all assumptions of GLMM 
+Our chosen model adheres to all the model assumptions for a Negative Binomial GLMM. 
 
-- The response variable and the predictors have a linear relationship within the levels of random effects. 
+The response variable and the predictors have a linear relationship within the levels of random effects. 
 ```{r}
 
 
@@ -790,6 +807,7 @@ ggplot(df_re, aes(x = re_year)) +
 #### Results
 
 This is the offset model summary output:
+<div class="scroll-box-vertical2">
 ```{r,results='asis'}
 sjPlot::tab_model(all_glmmodel_nb,
           transform = NULL, 
@@ -798,9 +816,10 @@ sjPlot::tab_model(all_glmmodel_nb,
           show.p = TRUE,           
           title = "GLMM negative binomial model with offset (Log Estimates)")
 ```
-
+</div>
 
 This is a model summary output with beta coefficients exponentiation into incidence rates ratios.
+<div class="scroll-box-vertical2">
 ```{r,results='asis'}
 library(sjPlot)
 tab_model(all_glmmodel_nb,
@@ -814,6 +833,7 @@ tab_model(all_glmmodel_nb,
 
 ##our low variability could be due to not having a random effect like state or abortion access fixed variable
 ```
+</div>
 
  - Black women had a 267% higher rate of maternal mortality compared to reference group (Asian), holding all other groups constant
  - White women have a  31% higher rate of maternal mortality compared to reference group (Asian) holding all other groups constant
@@ -831,6 +851,7 @@ tab_model(all_glmmodel_nb,
  - But even with low R2 the statistical significance of the fixed effects is still important because it highlights the significant relationship between the explanatory variables and maternal mortality. We are not so focused on prediction where a higher R2 would be more necessary for an adequate model
 
 This is brief glimpse at non offset glmm model table estimates: 
+<div class="scroll-box-vertical2">
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb,
           transform = NULL, #original log and not exponiated
@@ -839,7 +860,9 @@ sjPlot::tab_model(allno_glmmodel_nb,
           show.p = TRUE,           
           title = "Fixed Effects of GLMM model without offset (Log Estimates)")
 ```
+</div>
 
+<div class="scroll-box-vertical2">
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb,
           title = "Fixed Effects from GLMM with outset(Incidence Rates Ratios)")
@@ -850,6 +873,7 @@ sjPlot::tab_model(allno_glmmodel_nb,
 ##97.1% of proportion of variance explained  by fixed effects only, they only explain 5.5% of variance in maternal deaths sad
 ## conditional 99.2% is the proportion of variance contributed by fixed and random effectsToo good to be true
 ```
+</div>
 
   We will not be naming the incidence rates ratios for this not offset model since they are insanely inflated for example white women have a 98.8% higher rate of mortality than asian reference group and the age group 40 years and older is not statistically significant in this model but unknown ethnicity is found to be statistically significant.
 Additionally, ICC- intra-class correlation-0.71 of the proportion of the total variance explained by year is suspiciously high.
@@ -877,13 +901,6 @@ library("bbmle")
 ```
 
 
-
-```{r}
-
-
-MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_nb, ethnicity_agegroupno_glmmodel_nb)
-
-```
 
 
 ```{r}

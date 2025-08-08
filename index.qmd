@@ -721,7 +721,7 @@ $$
 
 Our chosen model adheres to all the model assumptions for a Negative Binomial GLMM. 
 
-The response variable and the predictors have a linear relationship within the levels of random effects. 
+The response variable and the predictors have a linear relationship within the levels of random effects. The blue LOESS line is close to the red reference line of zero, which indicates there not a non-linear relationship. The residuals are roughly centered around zero across the range of values. The variability of the residuals on the left of the graph suggests heteroscedasticity, which is expected. 
 ```{r}
 
 
@@ -753,7 +753,8 @@ var(Maternal_Deaths))
 ```
 
 
-- The residuals and random effects are independent.
+- The Q-Q plot of the random intercepts for Year suggests the distribution of the random effects is approximately normal. There is slight deviations at the extremes due to the low number of years.
+
 
 ```{r}
 
@@ -820,7 +821,7 @@ sjPlot::tab_model(all_glmmodel_nb,
 ```
 </div>
 
-This is a model summary output with beta coefficients exponentiation into incidence rates ratios.
+This is a model summary output with beta coefficients exponentiation into incidence rate ratios.
 <div class="scroll-box-vertical2">
 ```{r,results='asis'}
 library(sjPlot)
@@ -847,8 +848,7 @@ tab_model(all_glmmodel_nb,
  - Women 40 years and older have a 505% higher  rate of maternal mortality compared to reference group (under 25), holding all other groups constant 
  
  - There was a 20% lower rate in maternal mortality after Dobbs was passed compared to prior the passing of Dobbs
- - The residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects
-5.5% of proportion of variance explained by fixed effects only, they only explain 5.5% of variance in maternal deaths conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
+ - The residual variance of the model is 7.99, representing the variability in maternal deaths not explained by either fixed or random effects. The marginal R², which reflects the proportion of variance explained by fixed effects alone, is 5.6%. This indicates that the fixed effects account for only a small portion of the variability in maternal deaths. The conditional R², which includes both fixed and random effects, is 5.9%. This slight increase suggests that the random effect of Year contributes minimally to improving the model’s explanatory power.
  - Our low variability could be due to not having a random effect like state or other fixed effects to explain  variable like socioeconomic status, health care access, prenatal health etc.  
  - But even with low R2 the statistical significance of the fixed effects is still important because it highlights the significant relationship between the explanatory variables and maternal mortality. We are not so focused on prediction where a higher R2 would be more necessary for an adequate model
 

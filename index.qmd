@@ -158,6 +158,10 @@ Fixed effects may include:
 
 - Dobbs Era (pre- or post-)
 
+Offset:
+
+- Log(Live Births)
+
 ## Analysis and Results
 
 ### Data Exploration and Visualization
@@ -719,25 +723,24 @@ $$
 
 #### Verifying Assumptions
 
-Our chosen model adheres to all the model assumptions for a Negative Binomial GLMM. 
+Our chosen model adheres to all the model assumptions for a Negative Binomial GLMM.
 
-The response variable and the predictors have a linear relationship within the levels of random effects. The blue LOESS line is close to the red reference line of zero, which indicates there not a non-linear relationship. The residuals are roughly centered around zero across the range of values. The variability of the residuals on the left of the graph suggests heteroscedasticity, which is expected. 
+- The response variable and the predictors have a linear relationship within the levels of random effects
+
+The graph shows the residual values of the model and the fitted values of the model and the scatter points are the fitted values of the model. The red reference line is where the residuals equal zero.There are no patterns with the scatter points which provides evidence that the response variable and the predictors have linear relationship within the levels of random effect (year). Additionally, The blue LOESS smoother line is close to the red reference line of zero, which provides further evidence of the linear relationship. The residuals are roughly centered around zero across the range of values. The variability of the residuals on the left of the graph suggests heteroscedasticity, which is expected. 
 ```{r}
 
 
-#The response variable and the predictors have a linear relationship within the levels of random effect
-# Base partial residuals (approximate)
-#Additionally a blue Loess lines is approximately close to this red reference line of 0 which helps evidence of linear relationship
-#there are no atterns with scatter plot
+
 resid_vals<-resid(all_glmmodel_nb,type = "pearson")
 fitted_vals <- predict(all_glmmodel_nb,type = "response")
 
 x <- jitter(fitted_vals)
 y<-resid_vals
 
-plot(x, y, main = "Residuals vs Fitted with LOESS model") #LOESS is smoother line
-abline(h = 0, col = "red")#where residuals equal zero
-lines(lowess(x, y), col = "blue", lwd = 2)#Blue LOESS line stays flat around 0
+plot(x, y, main = "Residuals vs Fitted with LOESS model") 
+abline(h = 0, col = "red")
+lines(lowess(x, y), col = "blue", lwd = 2)
 
 
 ```
@@ -752,57 +755,41 @@ total_df %>% summarize(mean(Maternal_Deaths),
 var(Maternal_Deaths))
 ```
 
-
+- The Independence of residual and Random Effects assumption is met 
+- The graph below plots the points of the the random effect (year) residuals falls on the red reference line of random intercept quantiles estimates versus normal distribution quantiles  and the red reference line represent where random effect residual points would lie if random intercepts were normally distributed.  
 - The Q-Q plot of the random intercepts for Year suggests the distribution of the random effects is approximately normal. There is slight deviations at the extremes due to the low number of years.
 
 
 ```{r}
 
-### The Independence of residual and Random Effects assumption is met because the dots of the residuals of the random effect (year) falls on the red refence line of  quantiles of random interceppt estimates vesus quantiles of normal distribution. A
-#  Independence of Residuals and Random Effects
-#random effects of year
-#residuals leftover variation after accounting for fixed and random effects
-#random effects show between group variation (how each group's slope or intercet differs)
-#if are independent then model is correctly partitioning information
-#residuals capture individual level random noise not explained by model and if
-#there is no tie between residuals or random effects it upholds key assumption 
-#that the random effects and residuals are independent of each other
-re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]]  # 'cond' = conditional mode
+re_year <- ranef(all_glmmodel_nb)$cond$Year[[1]] 
 
-
-qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")#plots quantiles of random intercept estimates vs quantiles of normal distriibution
-qqline(re_year, col = "red")##dots follow reference line that shows where points would lie if distribution was normal, random intercepts are normally distributed
-
+qqnorm(re_year, main = "Q-Q Plot of Random Intercepts in model(Year)")
+qqline(re_year, col = "red")
 
 
 ```
 
 - The random effects are assumed to be normally distributed, with mean 0 and variance $\sigma$.
+
+- The graph plots a blue density curve of random effect distribution. The red dashed line of the distribution indicates the distribution of ideal normal distribution with same means and standard deviation. The blue density curve falls approximately within the red line so the random effects are approximately normal. The approximately normal blue density of the random effect(year) could be expected to have mild deviations since we are working with count data. Yet, since most of the blue density falls within the ideal normal distribution curve then there is normality of random effects
  
 ```{r}
 #Normality of Random effects
 
-###According to this graph there is Normality of random effect because points fall close to red line of Q-Q plot. The histogram falls a somewhat nromal distribution. And the blue density of the random effect distribution lies mostly within the red dashed line of the distribution of ideal normal distribution with same means. The approximmately normal blue density of random effect year could be expected to have mild deviations since we are workking with count data
-
-#Points fall close to red line so random effects are approximately normal
 
 
-re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random reffect intercepts as numeric
-
-qqnorm(re_year, main = "Q-Q Plot of Random Effect of (Year)")
-qqline(re_year, col = "red")#points should roughly lie by this line if normal
-hist(re_year, main = "Histogram of Random Effects of model ", xlab = "Random effect (Year)")
+re_year <- ranef(all_glmmodel_nb)$cond$Year[["(Intercept)"]] #extract year random effect intercepts as numeric
 
 df_re <- data.frame(re = re_year)
 
 ggplot(df_re, aes(x = re_year)) +
   geom_density(fill = "skyblue", alpha = 0.5) +#density curve of random effect distribution
   stat_function(fun = dnorm, args = list(mean = mean(re_year), sd = sd(re_year)),
-                color = "red", linetype = "dashed") +###red is ideal normal distribution with same means and standard deviation
-  ggtitle("Density of Random Effect (Year) model  with Normal Curve")
+                color = "red", linetype = "dashed") +##red is ideal normal distribution with same means and standard deviation
+  ggtitle("Density of Random Effect (Year) model with Normal Curve")
 
-#since most of blue density is within red line 
-#The random effect of year is approximately normal with some mild deviations which is common with count model
+
  
 ```
 
@@ -828,15 +815,10 @@ library(sjPlot)
 tab_model(all_glmmodel_nb,
           title = " GLMM negative binomial model with offset")
 
-#residual variance is 7.99, variance in maternal deaths not explained by fixed effects or random effects
-#variance for random intercept of group year is 0.03
-#ICC- intraclass correlation- 0.00 of the proportion of the total variance explained by year, which is nothing year contributes nothing to explaining variation in maternal deaths it happens within years not between them
-##5.5% of proportion of variance explained  by fixed effects only, they only exlain 5.5% of variance in maternal deaths sad
-## conditional 5.9% is the proportion of variance contributed by fixed and random effects, random effect year contributes little to improving model
 
-##our low variability could be due to not having a random effect like state or abortion access fixed variable
 ```
 </div>
+
 
 ##### Results Snapshot by Predictor (Offset Model)
 
@@ -864,6 +846,7 @@ The low proportion of variance explained by the model may be due to the absence 
 
 Below is a brief glimpse at the non-offset GLMM model table estimates.
 
+
 <div class="scroll-box-vertical2">
 ```{r}
 sjPlot::tab_model(allno_glmmodel_nb,
@@ -886,8 +869,7 @@ We chose not to interpret the incidence rate ratios (IRRs) from the non-offset m
 
 The intra-class correlation (ICC) is also suspiciously high at 0.71, implying that 71% of the total variance is attributed to the random effect Year.
 
-Even more problematic is the model’s marginal R² of 95.7%, indicating that fixed effects alone explain nearly all of the variance in maternal mortality. The conditional R² rises to 98.8% when including random effects. These values are unrealistically high, and provide further evidence of unaccounted exposure in a model without offset. 
-
+Even more problematic is the model’s marginal R² of 95.7%, indicating that fixed effects alone explain nearly all of the variance in maternal mortality. The conditional R² rises to 98.8% when including random effects. These values are unrealistically high, and provide further evidence of unaccounted exposure in a model without offset.
 
 ```{r setup, include=FALSE}
 options(repos = c(CRAN = "https://cloud.r-project.org"))
@@ -905,15 +887,17 @@ if (!require("bbmle"))install.packages("bbmle")
 library("bbmle")
 ```
 
+- There is no singularity of the random effect (year)which demonstrates that the random effect year does contribute to the model. 
+- The collinearity VIF numbers have low values which suggests that none of the predictor variables are highly correlated which each other
+
 
 ```{r}
-#checking performance, R2 and singlulairty of effect variable and collinearity of model with offset
-performance::check_model(all_glmmodel_nb, verbose=TRUE, residual_type = "normal")##interesting
+
 check_singularity(all_glmmodel_nb)
 check_collinearity(all_glmmodel_nb)
 ```
 
-  This tests if model is overdispersed since the ratio given is around ,0.051 it is not indicative of overdispersion and neither is the p value which is much grater that (p <0.05) which also indicates there is no significant overdispersion with this model.
+  This tests if the model is overdispersed since the ratio given is around 1 and provides evidence that there is no overdispersion and neither is the p value which is much greater that (p <0.05) which also indicates there is no significant overdispersion with this model.
 
 ```{r}
 
@@ -942,6 +926,7 @@ install.packages("ggeffects")  # if not yet installed
   
 ```{r,fig.width=10, fig.height=4}
 par(mfrow = c(1, 2))
+
 library(ggeffects)
 library(patchwork)
 

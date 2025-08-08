@@ -663,20 +663,18 @@ MuMIn::model.sel(all_glmmodel_nb,allno_glmmodel_nb, ethnicity_agegroup_glmmodel_
 
 ```
 </div>
-We also ran models including or excluding the offset (log(Live_Births)) to see if there were be differences in AIC and estimates. AIC is the value in which we used to see how well a model performed.
-The best performing models were those with the fixed effects Ethnicity, Age Group, and Dobbs Era and random effect Year. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models, however did drop the Age Group Unknown factor from inclusion.
 
-  The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7).
-  
+We ran models with and without the offset term log(Live_Births) to evaluate differences in model fit, particularly using Akaike Information Criterion (AIC) as the primary metric for comparison. A lower AIC indicates a better-fitting model.
 
-  However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
+The best-performing models included the fixed effects Ethnicity, Age_Group, and Dobbs_Era, with Year as a random effect. The second place would be models with fixed effects Ethnicity and Age group and random effect Year. All models dropped the Age Group Unknown factor from inclusion.
 
-  The best performing model according to AIC included all fixed effects without offset and had the AIC (4981.7), and the second best performing model included all fixed effect but with offset (AIC= 4999.7). However, even though the model not using offset has lower AIC it is incorrect model because it does not include live births or correct variance structure, the estimates are widely different and it operates with the expectation that all variables have the same exposure or each group has the same amount of live births [@hilbe2011negative], [@nguyen2020guide], [@ha2023r]. For example not including offset assumes that people of different ethnicities gave the same birth amount each year which would not make sense given there are minorities that make up less of the population and thus will give less births. When omitting offset then all observations are assumed to have same exposure. Different years or ethnicity can have different numbers of births. Offset gives rate per exposure that is appropriate for each observation even if AIC value is higher. 
+The model with the lowest AIC (4561.1) included all fixed effects but excluded the offset. The next-best model, with an AIC of 4568.0, included the same fixed effects with the offset. Despite the slightly higher AIC, the offset-included model is more appropriate and valid, as it accounts for differences in exposure across groups (i.e., varying numbers of live births).
 
+Excluding the offset implies that all observations have equal exposure — suggesting, for instance, that every ethnic group has the same number of live births each year, which is not the case. In contrast, including the offset adjusts for the actual number of live births, yielding rate-based estimates that correctly reflect the underlying population structure. While the offset-free model appears better based on AIC alone, it leads to biased estimates due to ignoring exposure variability [@hilbe2011negative] [@nguyen2020guide] [@ha2023r].
 
+The majority of our visualizations will be based on the model with all fixed effects and with offset. Visualizations based on the non-offset model are included later for comparison with the offset model.
 
-Thus our visualizations will be based on the model with offset and all fixed effects.
-
+Here is the equation for a our chosen model in regression equation format:
 $$
 \begin{align*}
 \log(\mathbb{E}[\text{Maternal Deaths}_i]) &= \beta_0 
@@ -693,7 +691,7 @@ $$
 \end{align*}
 $$
 
-Here is equation for the non-offset model:
+Here is the equation for the non-offset model:
 
 $$
 \begin{align*}
